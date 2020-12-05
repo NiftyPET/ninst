@@ -3,7 +3,7 @@ on:
 - push
 jobs:
   check:
-    name: Check
+    name: Check Py${{ matrix.python }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
