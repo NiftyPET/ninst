@@ -6,9 +6,15 @@ __copyright__ = "Copyright 2018-20"
 
 import errno
 import os
-from math import pi
+from math import ceil, pi
 
-import numpy as np
+try:
+    from numpy import array
+except ImportError:
+
+    def array(x):
+        return x
+
 
 # > logging represented by an integer: 10, 20, 30... for DEBUG, INFO, WARNING...
 # > as it is in Python package logging, which is also used here.
@@ -104,11 +110,11 @@ RNG_STRT = 0
 RNG_END = 64
 
 # no of sinos in a segment out of 11 segments
-seg = np.array([127, 115, 115, 93, 93, 71, 71, 49, 49, 27, 27])
+seg = array([127, 115, 115, 93, 93, 71, 71, 49, 49, 27, 27])
 
 # minimum and maximum ring difference for each segment
-minrd = np.array([-5, -16, 6, -27, 17, -38, 28, -49, 39, -60, 50])
-maxrd = np.array([5, -6, 16, -17, 27, -28, 38, -39, 49, -50, 60])
+minrd = array([-5, -16, 6, -27, 17, -38, 28, -49, 39, -60, 50])
+maxrd = array([5, -6, 16, -17, 27, -28, 38, -39, 49, -50, 60])
 # ----------
 
 
@@ -167,18 +173,18 @@ TFOV2 = 890.0
 # target scale factors for scatter mu-map and emission image respectively
 # transmission (mu-map)
 TRGTSCT = [0.5, 0.33]
-SS_IMX = int(np.ceil(TRGTSCT[0] * SO_IMX) // 2 * 2)
-SS_IMY = int(np.ceil(TRGTSCT[0] * SO_IMY) // 2 * 2)
-SS_IMZ = int(np.ceil(TRGTSCT[0] * SO_IMZ) // 2 * 2 - 1)
+SS_IMX = int(ceil(TRGTSCT[0] * SO_IMX) // 2 * 2)
+SS_IMY = int(ceil(TRGTSCT[0] * SO_IMY) // 2 * 2)
+SS_IMZ = int(ceil(TRGTSCT[0] * SO_IMZ) // 2 * 2 - 1)
 SS_VXY = round((SO_VXY * SO_IMX) / SS_IMX, 6)
 SS_VXZ = round((SO_VXZ * SO_IMZ) / SS_IMZ, 6)
 IS_VXZ = round(1 / SS_VXZ, 6)
 # scaling [z,y,x]
 SCTSCLMU = [float(SS_IMZ) / SO_IMZ, float(SS_IMY) / SO_IMY, float(SS_IMX) / SO_IMX]
 # emission
-SSE_IMX = int(np.ceil(TRGTSCT[1] * SO_IMX) // 2 * 2)
-SSE_IMY = int(np.ceil(TRGTSCT[1] * SO_IMY) // 2 * 2)
-SSE_IMZ = int(np.ceil(TRGTSCT[1] * SO_IMZ) // 2 * 2 + 1)
+SSE_IMX = int(ceil(TRGTSCT[1] * SO_IMX) // 2 * 2)
+SSE_IMY = int(ceil(TRGTSCT[1] * SO_IMY) // 2 * 2)
+SSE_IMZ = int(ceil(TRGTSCT[1] * SO_IMZ) // 2 * 2 + 1)
 SSE_VXY = round((SO_VXY * SO_IMX) / SSE_IMX, 6)
 SSE_VXZ = round((SO_VXZ * SO_IMZ) / SSE_IMZ, 6)
 # scaling [z,y,x]
@@ -190,16 +196,16 @@ SCTSCLEM = [float(SSE_IMZ) / SO_IMZ, float(SSE_IMY) / SO_IMY, float(SSE_IMX) / S
 # # scaling for the mu-map
 # SCTSCLMU = [0.499, 0.5, 0.5]
 
-# SS_IMX = int(np.ceil(SCTSCLMU[2]*SO_IMX)//2*2)#172
-# SS_IMY = int(np.ceil(SCTSCLMU[1]*SO_IMY)//2*2)#172
-# SS_IMZ = int(np.ceil(SCTSCLMU[0]*SO_IMZ)//2*2-1)#63
+# SS_IMX = int(ceil(SCTSCLMU[2]*SO_IMX)//2*2)#172
+# SS_IMY = int(ceil(SCTSCLMU[1]*SO_IMY)//2*2)#172
+# SS_IMZ = int(ceil(SCTSCLMU[0]*SO_IMZ)//2*2-1)#63
 # SS_VXY = round((SO_VXY*SO_IMX)/SS_IMX,6) # 0.417252 #
 # SS_VXZ = round((SO_VXZ*SO_IMZ)/SS_IMZ,6) # 0.409474 #
 # IS_VXZ = round(1/SS_VXZ,6)
 
-# SSE_IMX = int(np.ceil(SCTSCLEM[2]*SO_IMX)//2*2) #114
-# SSE_IMY = int(np.ceil(SCTSCLEM[1]*SO_IMY)//2*2) #114
-# SSE_IMZ = int(np.ceil(SCTSCLEM[0]*SO_IMZ)//2*2-1) #43
+# SSE_IMX = int(ceil(SCTSCLEM[2]*SO_IMX)//2*2) #114
+# SSE_IMY = int(ceil(SCTSCLEM[1]*SO_IMY)//2*2) #114
+# SSE_IMZ = int(ceil(SCTSCLEM[0]*SO_IMZ)//2*2-1) #43
 
 # SSE_VXY = round((SO_VXY*SO_IMX)/SSE_IMX,6) #0.629538
 # SSE_VXZ = round((SO_VXZ*SO_IMZ)/SSE_IMZ,6) #0.599927
@@ -412,7 +418,7 @@ def get_mmr_constants():
         "ITOFBIND": ITOFBIND,
         # affine and image size for the reconstructed image,
         # assuming the centre of voxels in mm
-        "AFFINE": np.array(
+        "AFFINE": array(
             [
                 [-10 * SO_VXX, 0.0, 0.0, 5.0 * SO_IMX * SO_VXX],  # +5.*SO_VXX
                 [0.0, 10 * SO_VXY, 0.0, -5.0 * SO_IMY * SO_VXY],  # +5.*SO_VXY
@@ -420,7 +426,7 @@ def get_mmr_constants():
                 [0.0, 0.0, 0.0, 1.0],
             ]
         ),
-        "IMSIZE": np.array([SO_IMZ, SO_IMY, SO_IMX]),
+        "IMSIZE": array([SO_IMZ, SO_IMY, SO_IMX]),
         "BTP": 0,  # 1:non parametric bootstrap, 2: parametric bootstrap (recommended)
         "BTPRT": 1.0,  # Ratio of bootstrapped/original events (enables downsampling)
         "SCTSCLEM": SCTSCLEM,
