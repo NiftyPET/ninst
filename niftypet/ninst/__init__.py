@@ -84,7 +84,7 @@ except ImportError:
         )
     )
 
-if resources.CC_ARCH != "" and platform.system() in ["Linux", "Windows"]:
+if getattr(resources, "CC_ARCH", "") and platform.system() in ["Linux", "Windows"]:
     from .dinf import dev_info, gpuinfo
 else:
     dev_info, gpuinfo = None, None

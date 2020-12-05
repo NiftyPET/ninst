@@ -10,13 +10,17 @@ import sys
 from distutils.sysconfig import get_python_inc
 from textwrap import dedent
 
-import numpy as np
+try:
+    from numpy import get_include as get_numpy_inc
+except ImportError:
+    pass
+else:
+    nphdr = get_numpy_inc()  # numpy header path
 
 log = logging.getLogger(__name__)
 
 prefix = sys.prefix
 pyhdr = get_python_inc()  # Python header paths
-nphdr = np.get_include()  # numpy header path
 mincc = 35  # minimum required CUDA compute capability
 
 
