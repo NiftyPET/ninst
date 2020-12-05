@@ -103,11 +103,11 @@ def dev_setup():
     from miutil import cuinfo
 
     if "DEVID" in Cnt:
-        ccstr = cuinfo.get_nvcc_flags(int(Cnt["DEVID"]))
+        ccstr = cuinfo.nvcc_flags(int(Cnt["DEVID"]))
         devid = Cnt["DEVID"]
     else:
-        devid = cuinfo.get_device_count() - 1
-        ccstr = ";".join(set(map(cuinfo.get_nvcc_flags, range(devid + 1))))
+        devid = cuinfo.num_devices() - 1
+        ccstr = ";".join(set(map(cuinfo.nvcc_flags, range(devid + 1))))
 
     # passing this setting to resources.py
     fpth = os.path.join(
