@@ -112,14 +112,14 @@ def check_depends():
     # -check if CUDA is installed
     try:
         check_call(["nvcc", "--version"])
-    except CalledProcessError:
+    except (CalledProcessError, FileNotFoundError):
         log.error("CUDA (nvcc) does not seem to be installed!")
         outdct["cuda"] = False
 
     # -check if git is installed
     try:
         check_call(["git", "--version"])
-    except CalledProcessError:
+    except (CalledProcessError, FileNotFoundError):
         log.error(
             "git does not seem to be installed;"
             " get it from: https://git-scm.com/download/"
@@ -129,7 +129,7 @@ def check_depends():
     # -check if cmake is installed
     try:
         check_call(["cmake", "--version"])
-    except CalledProcessError:
+    except (CalledProcessError, FileNotFoundError):
         log.error(
             "cmake does not seem to be installed;"
             " get it from: https://cmake.org/download/"
