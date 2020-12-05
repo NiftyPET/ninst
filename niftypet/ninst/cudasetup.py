@@ -5,6 +5,7 @@ import os
 
 # from pkg_resources import resource_filename
 import platform
+import re
 import shutil
 import sys
 from distutils.sysconfig import get_python_inc
@@ -28,7 +29,10 @@ def path_niftypet_local():
     """Get the path to the local (home) folder for NiftyPET resources."""
     # if using conda put the resources in the folder with the environment name
     if "CONDA_DEFAULT_ENV" in os.environ:
-        env = os.environ["CONDA_DEFAULT_ENV"]
+        try:
+            env = re.findall(r"envs[/\\](.*)[/\\]bin[/\\]python", sys.executable)[0]
+        except IndexError:
+            env = os.environ["CONDA_DEFAULT_ENV"]
         log.info("install> conda environment found: {}".format(env))
     else:
         env = ""
