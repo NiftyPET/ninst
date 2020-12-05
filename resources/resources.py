@@ -6,7 +6,6 @@ __copyright__ = "Copyright 2018-20"
 
 import errno
 import os
-import platform
 from math import pi
 
 import numpy as np
@@ -48,12 +47,12 @@ REFPATH = ""
 
 # -----------------------------------------------------
 # DO NOT MODIFY BELOW--DONE AUTOMATICALLY
-### start GPU properties ###
-### end GPU properties ###
+# # # start GPU properties # # #
+# # # end GPU properties # # #
 
 # paths to apps and tools needed by NiftyPET
-### start NiftyPET tools ###
-### end NiftyPET tools ###
+# # # start NiftyPET tools # # #
+# # # end NiftyPET tools # # #
 # -----------------------------------------------------
 
 # enable xnat module
@@ -127,7 +126,8 @@ NTV = 907
 # number of direct sinograms (i.e., for segment 0)
 SEG0 = 127
 
-# Reference image size (usually the default from Siemens) and GPU dimensions for optimal execution
+# Reference image size (usually the default from Siemens)
+# and GPU dimensions for optimal execution
 # ~~~
 SO_IMZ = 127
 SO_IMY = 344
@@ -266,22 +266,29 @@ ICOSSTP = 1 / COSSTP
 # intensity percentage threshold of voxels to be considered in the image
 ETHRLD = 0.05
 
+
 # =================================================================================================
-def get_gpu_constants(Cnt={}):
+def get_gpu_constants(Cnt=None):
     """Return a dictionary of GPU related constants"""
-    if "DEV_ID" in globals():
-        Cnt[
-            "DEVID"
-        ] = DEV_ID  # device id; used for choosing the GPU device for calculations
-    if "CC_ARCH" in globals():
-        Cnt["CCARCH"] = CC_ARCH  # chosen device architectures for NVCC compilation
+    if Cnt is None:
+        Cnt = {}
+
+    for k in [
+        "DEV_ID",  # device id; used for choosing the GPU device for calculations
+        "CC_ARCH",  # chosen device architectures for NVCC compilation
+    ]:
+        val = globals().get(k, "")
+        if val:
+            Cnt[k.replace("_", "")] = val
 
     return Cnt
 
 
 # =================================================================================================
-def get_setup(Cnt={}):
+def get_setup(Cnt=None):
     """Return a dictionary of GPU, mu-map hardware and third party set-up."""
+    if Cnt is None:
+        Cnt = {}
 
     # the name of the folder for NiftyPET tools
     Cnt["DIRTOOLS"] = DIRTOOLS
@@ -298,23 +305,18 @@ def get_setup(Cnt={}):
     # GPU related setup
     Cnt = get_gpu_constants(Cnt)
 
-    if "PATHTOOLS" in globals() and PATHTOOLS != "":
-        Cnt["PATHTOOLS"] = PATHTOOLS
-    # image processing setup
-    if "RESPATH" in globals() and RESPATH != "":
-        Cnt["RESPATH"] = RESPATH
-    if "REGPATH" in globals() and REGPATH != "":
-        Cnt["REGPATH"] = REGPATH
-    if "DCM2NIIX" in globals() and DCM2NIIX != "":
-        Cnt["DCM2NIIX"] = DCM2NIIX
-    # hardware mu-maps
-    if "HMUDIR" in globals() and HMUDIR != "":
-        Cnt["HMUDIR"] = HMUDIR
-    if "VINCIPATH" in globals() and VINCIPATH != "":
-        Cnt["VINCIPATH"] = VINCIPATH
-    # > testing
-    if "REFPATH" in globals() and REFPATH != "":
-        Cnt["REFPATH"] = PATHTOOLS
+    for k in [
+        "PATHTOOLS",
+        "RESPATH",  # image processing setup
+        "REGPATH",
+        "DCM2NIIX",
+        "HMUDIR",  # hardware mu-maps
+        "VINCIPATH",
+        "REFPATH",  # > testing
+    ]:
+        val = globals().get(k, "")
+        if val:
+            Cnt[k] = val
 
     Cnt["ENBLXNAT"] = ENBLXNAT
     Cnt["ENBLAGG"] = ENBLAGG
@@ -352,7 +354,7 @@ def get_mmr_constants():
         "SPN": SPAN,  # span-1 (1), span-11 (11), ssrb (0)
         "TFOV2": TFOV2,  # squared radius of TFOV
         "RNG_STRT": RNG_STRT,  # limit axial extension by defining start and end ring
-        "RNG_END": RNG_END,  # this feature only works with span-1 processing (Cnt['SPN']=1)
+        "RNG_END": RNG_END,  # only works with span-1 (Cnt['SPN']==1)
         "SS_IMZ": SS_IMZ,  # Scatter mu-map iamge size
         "SS_IMY": SS_IMY,
         "SS_IMX": SS_IMX,
@@ -388,8 +390,8 @@ def get_mmr_constants():
         "MNRD": minrd,
         "MXRD": maxrd,
         # > scatter moved to scatter LUTs script in sct folder
-        #'NSRNG':NSRNG, # number of scatter rings for modelling
-        #'SCTRNG':sct_irng, # scatter ring indexes
+        # 'NSRNG':NSRNG, # number of scatter rings for modelling
+        # 'SCTRNG':sct_irng, # scatter ring indexes
         "TGAP": TGAP,
         "OFFGAP": OFFGAP,
         "AXR": AXR,
@@ -401,14 +403,15 @@ def get_mmr_constants():
         "NCOS": NCOS,  # number of cos samples for LUT
         "COSSTP": COSSTP,  # cosine step
         "ICOSSTP": ICOSSTP,  # inverse of cosine step
-        "ETHRLD": ETHRLD,  # intensity emission image threshold (used in scatter modelling)
+        "ETHRLD": ETHRLD,  # intensity emission image threshold (for scatter modelling)
         "CLGHT": CLGHT,  # speed of light [cm/s]
         "CWND": CWND,  # coincidence time window [ps]
         "TOFBINN": TOFBINN,  # number of TOF bins
         "TOFBINS": TOFBINS,  # TOF bin width [ps]
         "TOFBIND": TOFBIND,
         "ITOFBIND": ITOFBIND,
-        # affine and image size for the reconstructed image, assuming the centre of voxels in mm
+        # affine and image size for the reconstructed image,
+        # assuming the centre of voxels in mm
         "AFFINE": np.array(
             [
                 [-10 * SO_VXX, 0.0, 0.0, 5.0 * SO_IMX * SO_VXX],  # +5.*SO_VXX
@@ -431,9 +434,9 @@ def get_mmr_constants():
 
 
 def get_refimg(pathsrc):
-    """ Reference images reconstructed for testing future versions and editions of NiftyPET.
-        It is based on the open source list-mode amyloid PET data available at:
-        https://doi.org/10.5281/zenodo.1472951
+    """Reference images reconstructed for testing future versions and editions of NiftyPET.
+    It is based on the open source list-mode amyloid PET data available at:
+    https://doi.org/10.5281/zenodo.1472951
     """
 
     if (

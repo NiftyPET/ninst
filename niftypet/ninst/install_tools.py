@@ -417,8 +417,8 @@ def update_resources(Cnt):
         rsrc = f.read()
         f.close()
         # get the region of keeping in synch with Python
-        i0 = rsrc.find("### start NiftyPET tools ###")
-        i1 = rsrc.find("### end NiftyPET tools ###")
+        i0 = rsrc.find("# # # start NiftyPET tools # # #")
+        i1 = rsrc.find("# # # end NiftyPET tools # # #")
         pth_list = []
         for k in key_list:
             if k in Cnt:
@@ -427,7 +427,7 @@ def update_resources(Cnt):
                 pth_list.append("''")
 
         # modify resources.py with the new paths
-        strNew = "### start NiftyPET tools ###\n"
+        strNew = "# # # start NiftyPET tools # # #\n"
         for i in range(len(key_list)):
             if pth_list[i] != "''":
                 strNew += key_list[i] + " = " + pth_list[i] + "\n"

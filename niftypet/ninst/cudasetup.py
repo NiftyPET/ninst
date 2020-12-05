@@ -108,14 +108,14 @@ def dev_setup():
     with open(fpth, "r") as f:
         rsrc = f.read()
     # get the region of keeping in synch with Python
-    i0 = rsrc.find("### start GPU properties ###")
-    i1 = rsrc.find("### end GPU properties ###")
+    i0 = rsrc.find("# # # start GPU properties # # #")
+    i1 = rsrc.find("# # # end GPU properties # # #")
     # list of constants which will be kept in sych from Python
     cnt_dict = {"DEV_ID": str(devid), "CC_ARCH": repr(ccstr)}
     # update the resource.py file
     with open(fpth, "w") as f:
         f.write(rsrc[:i0])
-        f.write("### start GPU properties ###\n")
+        f.write("# # # start GPU properties # # #\n")
         for k, v in cnt_dict.items():
             f.write(k + " = " + v + "\n")
         f.write(rsrc[i1:])
