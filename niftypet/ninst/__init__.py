@@ -8,9 +8,10 @@ import os
 import platform
 import re
 import sys
-from textwrap import dedent
 
 from tqdm.auto import tqdm
+
+from .cudasetup import get_resources
 
 __all__ = ["LogHandler", "path_resources", "resources", "dev_info", "gpuinfo"]
 
@@ -68,21 +69,7 @@ elif platform.system() == "Windows":
 else:
     log.error("unrecognised operating system!")
 
-sys.path.insert(1, path_resources)
-try:
-    import resources
-except ImportError:
-    raise ImportError(
-        dedent(
-            """\
-        --------------------------------------------------------------------------
-        NiftyPET resources file <resources.py> could not be imported.
-        It should be in ~/.niftypet/resources.py (Linux) or
-        in //Users//USERNAME//AppData//Local//niftypet//resources.py (Windows)
-        but likely it does not exists.
-        --------------------------------------------------------------------------"""
-        )
-    )
+resources = get_resources()
 
 if getattr(resources, "CC_ARCH", "") and platform.system() in ["Linux", "Windows"]:
     from .dinf import dev_info, gpuinfo

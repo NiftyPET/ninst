@@ -88,7 +88,7 @@ def dev_setup():
         resources = get_resources()
     else:
         log.error("resources file not found/installed.")
-        return None
+        return
 
     # get all constants and check if device is already chosen
     Cnt = resources.get_setup()
@@ -181,5 +181,6 @@ def get_resources(sys_append=True):
         --------------------------------------------------------------------------"""
             )
         )
+        raise
     else:
         return resources
