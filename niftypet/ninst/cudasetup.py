@@ -133,8 +133,6 @@ def resources_setup(gpu=True):
     """
     log.info("installing file <resources.py> into home directory if it does not exist.")
     path_current = os.path.dirname(os.path.realpath(__file__))
-    # path to the install version of resources.py.
-    path_install = os.path.join(path_current, "resources")
     # get the path to the local resources.py (on Linux machines it is in ~/.niftypet)
     path_resources = path_niftypet_local()
     log.info("current path: {}".format(path_current))
@@ -144,9 +142,9 @@ def resources_setup(gpu=True):
         os.makedirs(path_resources)
     # is resources.py in the folder?
     if not os.path.isfile(os.path.join(path_resources, "resources.py")):
-        if os.path.isfile(os.path.join(path_install, "resources.py")):
+        if os.path.isfile(os.path.join(path_current, "resources_raw.py")):
             shutil.copyfile(
-                os.path.join(path_install, "resources.py"),
+                os.path.join(path_current, "resources_raw.py"),
                 os.path.join(path_resources, "resources.py"),
             )
         else:
