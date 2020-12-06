@@ -15,8 +15,18 @@ from subprocess import PIPE, CalledProcessError, check_call, run
 from textwrap import dedent
 
 if os.getenv("DISPLAY", False):
+    from functools import wraps
     from tkinter import Tk
-    from tkinter.filedialog import askdirectory
+    from tkinter.filedialog import askdirectory as ask
+
+    @wraps(ask)
+    def askdirectory(*args, **kwargs):
+        Tk().withdraw()
+        res = ask(*args, **kwargs)
+        Tk().destroy()
+        return res
+
+
 else:
 
     def askdirectory(title="Folder: ", initialdir=None, name=""):
@@ -251,12 +261,10 @@ def install_tool(app, Cnt):
     elif "PATHTOOLS" not in Cnt or Cnt["PATHTOOLS"] != "":
         if os.getenv("DISPLAY", False) and platform.system() in ["Linux", "Windows"]:
             log.info("DISPLAY: {}".format(os.environ["DISPLAY"]))
-            Tk().withdraw()
             dircore = askdirectory(
                 title="choose a place for NiftyPET tools",
                 initialdir=os.path.expanduser("~"),
             )
-            Tk().destroy()
             # get the full (combined path)
             path_tools = os.path.join(dircore, Cnt["DIRTOOLS"])
         else:
