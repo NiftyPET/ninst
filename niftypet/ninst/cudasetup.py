@@ -107,6 +107,8 @@ def dev_setup():
         devid = Cnt["DEVID"]
     else:
         devid = cuinfo.num_devices() - 1
+        if devid == -1:
+            return ""
         ccstr = ";".join(set(map(cuinfo.nvcc_flags, range(devid + 1))))
 
     # passing this setting to resources.py
