@@ -87,6 +87,17 @@ dirbld = "_bld"
 ncpu = multiprocessing.cpu_count()
 
 
+class LogHandler(logging.StreamHandler):
+    """Custom formatting"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        fmt = logging.Formatter(
+            "%(levelname)s:%(asctime)s:%(name)s:%(funcName)s\n> %(message)s"
+        )
+        self.setFormatter(fmt)
+
+
 def query_yesno(question):
     valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
     prompt = " [Y/n]: "

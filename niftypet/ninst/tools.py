@@ -39,7 +39,7 @@ class LogHandler(logging.StreamHandler):
             self.handleError(record)
 
 
-log = logging.getLogger(__name__)
+# log = logging.getLogger(__name__)
 # technically bad practice to add handlers
 # https://docs.python.org/3/howto/logging.html#library-config
 # log.addHandler(LogHandler())  # do it anyway for convenience
