@@ -262,7 +262,7 @@ def install_tool(app, Cnt):
         else:
             try:
                 path_tools = askdirectory(
-                    "Enter path for NiftyPET tools (registration, etc): ",
+                    title="Enter path for NiftyPET tools (registration, etc): ",
                     name="PATHTOOLS",
                 )
             except Exception:

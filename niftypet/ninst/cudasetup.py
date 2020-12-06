@@ -107,6 +107,8 @@ def dev_setup():
         devid = Cnt["DEVID"]
     else:
         devid = cuinfo.num_devices() - 1
+        if devid == -1:
+            return ""
         ccstr = ";".join(set(map(cuinfo.nvcc_flags, range(devid + 1))))
 
     # passing this setting to resources.py
@@ -146,9 +148,9 @@ def resources_setup(gpu=True):
         os.makedirs(path_resources)
     # is resources.py in the folder?
     if not os.path.isfile(os.path.join(path_resources, "resources.py")):
-        if os.path.isfile(os.path.join(path_current, "resources_raw.py")):
+        if os.path.isfile(os.path.join(path_current, "raw", "resources.py")):
             shutil.copyfile(
-                os.path.join(path_current, "resources_raw.py"),
+                os.path.join(path_current, "raw", "resources.py"),
                 os.path.join(path_resources, "resources.py"),
             )
         else:
