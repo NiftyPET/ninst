@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 """Tools for CUDA compilation and set-up for Python 3."""
+import importlib
 import logging
 import os
-
-# from pkg_resources import resource_filename
 import platform
 import re
 import shutil
@@ -11,6 +10,7 @@ import sys
 from distutils.sysconfig import get_python_inc
 from textwrap import dedent
 
+# from pkg_resources import resource_filename
 try:
     from numpy import get_include as get_numpy_inc
 except ImportError:
@@ -168,7 +168,7 @@ def resources_setup(gpu=True):
     return dev_setup() if gpu else ""
 
 
-def get_resources(sys_append=True):
+def get_resources(sys_append=True, reload=True):
     path_resources = path_niftypet_local()
     if sys_append:
         if path_resources not in sys.path:
@@ -189,4 +189,4 @@ def get_resources(sys_append=True):
         )
         raise
     else:
-        return resources
+        return importlib.reload(resources) if reload else resources
