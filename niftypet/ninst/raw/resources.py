@@ -283,8 +283,8 @@ def get_gpu_constants(Cnt=None):
         "DEV_ID",  # device id; used for choosing the GPU device for calculations
         "CC_ARCH",  # chosen device architectures for NVCC compilation
     ]:
-        val = globals().get(k, "")
-        if val:
+        val = globals().get(k)
+        if val is not None:
             Cnt[k.replace("_", "")] = val
 
     return Cnt
@@ -320,8 +320,8 @@ def get_setup(Cnt=None):
         "VINCIPATH",
         "REFPATH",  # > testing
     ]:
-        val = globals().get(k, "")
-        if val:
+        val = globals().get(k)
+        if val is not None:
             Cnt[k] = val
 
     Cnt["ENBLXNAT"] = ENBLXNAT
