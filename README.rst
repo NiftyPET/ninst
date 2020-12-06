@@ -1,8 +1,8 @@
 ==================================
-ninst: NiftyPET Installation Tools
+NINST: NiftyPET Installation Tools
 ==================================
 
-|Docs| |PyPI-Status|
+|Docs| |Version| |Py-Versions| |Tests| |Coverage|
 
 ``ninst`` is a stand-alone Python sub-package of NiftyPET_, dedicated to helping with installation of other sub-packages. Although it is an essential part of NiftyPET_ packaging, ``ninst`` could be used in other projects.
 
@@ -23,9 +23,13 @@ Copyright 2018-20
 
 .. |Docs| image:: https://readthedocs.org/projects/niftypet/badge/?version=latest
    :target: https://niftypet.readthedocs.io/en/latest/?badge=latest
-.. |Licence| image:: https://img.shields.io/pypi/l/ninst.svg?label=licence
-   :target: https://github.com/NiftyPET/ninst/blob/master/LICENCE
-.. |PyPI-Downloads| image:: https://img.shields.io/pypi/dm/ninst.svg?label=PyPI%20downloads
-   :target: https://pypi.org/project/ninst
-.. |PyPI-Status| image:: https://img.shields.io/pypi/v/ninst.svg?label=latest
+.. |Licence| image:: https://img.shields.io/pypi/l/ninst.svg
+   :target: https://raw.githubusercontent.com/NiftyPET/ninst/master/LICENCE
+.. |Tests| image:: https://img.shields.io/github/workflow/status/NiftyPET/ninst/Test?logo=GitHub
+   :target: https://github.com/NiftyPET/ninst/actions
+.. |Coverage| image:: https://codecov.io/gh/NiftyPET/ninst/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/NiftyPET/ninst
+.. |Version| image:: https://img.shields.io/pypi/v/ninst.svg?logo=python&logoColor=white
+   :target: https://github.com/NiftyPET/ninst/releases
+.. |Py-Versions| image:: https://img.shields.io/pypi/pyversions/ninst.svg?logo=python&logoColor=white
    :target: https://pypi.org/project/ninst
