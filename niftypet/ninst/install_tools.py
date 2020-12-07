@@ -86,15 +86,15 @@ dirbld = "_bld"
 # number of threads
 ncpu = multiprocessing.cpu_count()
 
+LOG_FORMAT = "%(levelname)s:%(asctime)s:%(name)s:%(funcName)s\n> %(message)s"
+
 
 class LogHandler(logging.StreamHandler):
     """Custom formatting"""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        fmt = logging.Formatter(
-            "%(levelname)s:%(asctime)s:%(name)s:%(funcName)s\n> %(message)s"
-        )
+        fmt = logging.Formatter(LOG_FORMAT)
         self.setFormatter(fmt)
 
 

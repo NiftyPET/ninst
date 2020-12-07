@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
 """initialise the NiftyPET ninst package"""
-__author__ = "Casper O. da Costa-Luis", "Pawel J. Markiewicz"
-__date__ = "2020"
-
-import logging
 import platform
 
 from tqdm.auto import tqdm
 
 from . import cudasetup as cs
+from . import install_tools as tls
+from .install_tools import LOG_FORMAT
 
-__all__ = ["LogHandler", "path_resources", "resources", "dev_info", "gpuinfo"]
+__all__ = [
+    "LOG_FORMAT",
+    "LogHandler",
+    "path_resources",
+    "resources",
+    "dev_info",
+    "gpuinfo",
+]
 
 
-class LogHandler(logging.StreamHandler):
+class LogHandler(tls.LogHandler):
     """Custom formatting and tqdm-compatibility"""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        fmt = logging.Formatter(
-            "%(levelname)s:%(asctime)s:%(name)s:%(funcName)s\n> %(message)s"
-        )
-        self.setFormatter(fmt)
 
     def handleError(self, record):
         super().handleError(record)
