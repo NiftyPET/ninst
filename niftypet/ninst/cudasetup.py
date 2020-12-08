@@ -8,6 +8,7 @@ import re
 import shutil
 import sys
 from distutils.sysconfig import get_python_inc
+from subprocess import PIPE, run
 from textwrap import dedent
 
 # from pkg_resources import resource_filename
@@ -190,3 +191,81 @@ def get_resources(sys_append=True, reload=True):
         raise
     else:
         return importlib.reload(resources) if reload else resources
+
+
+def cmake_cuda(
+    path_source, path_build, nvcc_flags="", logfile_prefix="py_", msvc_version=""
+):
+    # CUDA installation
+    log.info(
+        dedent(
+            """
+            --------------------------------------------------------------
+            CUDA compilation
+            --------------------------------------------------------------"""
+        )
+    )
+
+    if not os.path.isdir(path_build):
+        os.makedirs(path_build)
+    path_current = os.path.abspath(os.curdir)
+    try:
+        os.chdir(path_build)
+
+        # cmake installation commands
+        cmds = [
+            [
+                "cmake",
+                path_source,
+                f"-DPython3_ROOT_DIR={sys.prefix}",
+                f"-DCUDA_NVCC_FLAGS={nvcc_flags}",
+            ],
+            ["cmake", "--build", "./"],
+        ]
+
+        if platform.system() == "Windows":
+            cmds[0] += ["-G", msvc_version]
+            cmds[1] += ["--config", "Release"]
+
+        # run commands with logging
+        cmakelogs = [
+            "{logfile_prefix}cmake_config.log",
+            "{logfile_prefix}cmake_build.log",
+        ]
+        errs = False
+        for cmd, cmakelog in zip(cmds, cmakelogs):
+            log.info("Command:%s", cmd)
+            p = run(cmd, stdout=PIPE, stderr=PIPE)
+            stdout = p.stdout.decode("utf-8")
+            stderr = p.stderr.decode("utf-8")
+
+            with open(cmakelog, "w") as fd:
+                fd.write(stdout)
+
+            if p.returncode:
+                errs = True
+
+            log.info(
+                dedent(
+                    """
+                    ----------- compilation output ----------
+                    %s
+                    ------------------ end ------------------"""
+                ),
+                stdout,
+            )
+
+            if p.stderr:
+                log.error(
+                    dedent(
+                        """
+                        --------------- process errors ----------------
+                        %s
+                        --------------------- end ---------------------"""
+                    ),
+                    stderr,
+                )
+        if errs:
+            raise SystemError("compilation failed")
+    finally:
+        os.chdir(path_current)
