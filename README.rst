@@ -1,5 +1,5 @@
 ==================================
-NINST: NiftyPET Installation Tools
+NInst: NiftyPET Installation Tools
 ==================================
 
 |Docs| |Version| |Py-Versions| |Tests| |Coverage|
@@ -19,17 +19,17 @@ Copyright 2018-20
 
 - `Casper O. da Costa-Luis <https://github.com/casperdcl>`__ @ King's College London
 - `Pawel J. Markiewicz <https://github.com/pjmark>`__ @ University College London
-- `Contributors <https://github.com/NiftyPET/NINST/graphs/contributors>`__
+- `Contributors <https://github.com/NiftyPET/NInst/graphs/contributors>`__
 
 .. |Docs| image:: https://readthedocs.org/projects/niftypet/badge/?version=latest
    :target: https://niftypet.readthedocs.io/en/latest/?badge=latest
 .. |Licence| image:: https://img.shields.io/pypi/l/ninst.svg
-   :target: https://raw.githubusercontent.com/NiftyPET/NINST/master/LICENCE
-.. |Tests| image:: https://img.shields.io/github/workflow/status/NiftyPET/NINST/Test?logo=GitHub
-   :target: https://github.com/NiftyPET/NINST/actions
-.. |Coverage| image:: https://codecov.io/gh/NiftyPET/NINST/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/NiftyPET/NINST
+   :target: https://raw.githubusercontent.com/NiftyPET/NInst/master/LICENCE
+.. |Tests| image:: https://img.shields.io/github/workflow/status/NiftyPET/NInst/Test?logo=GitHub
+   :target: https://github.com/NiftyPET/NInst/actions
+.. |Coverage| image:: https://codecov.io/gh/NiftyPET/NInst/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/NiftyPET/NInst
 .. |Version| image:: https://img.shields.io/pypi/v/ninst.svg?logo=python&logoColor=white
-   :target: https://github.com/NiftyPET/NINST/releases
+   :target: https://github.com/NiftyPET/NInst/releases
 .. |Py-Versions| image:: https://img.shields.io/pypi/pyversions/ninst.svg?logo=python&logoColor=white
    :target: https://pypi.org/project/ninst
