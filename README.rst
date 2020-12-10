@@ -10,6 +10,26 @@ NInst: NiftyPET Installation Tools
 
 **Documentation with installation manual and tutorials**: https://niftypet.readthedocs.io/
 
+Install
+~~~~~~~
+
+.. code:: sh
+
+    pip install ninst
+
+Note that installation prompts for setting the path to ``NiftyPET_tools``.
+This can be avoided by setting the environment variables ``PATHTOOLS``.
+It's also recommended (but not required) to use `conda`.
+
+.. code:: sh
+
+    # optional (Linux syntax) to avoid prompts
+    export PATHTOOLS=$HOME/NiftyPET_tools
+    # cross-platform install
+    conda create -n niftypet -c conda-forge python=3 numpy
+    conda activate niftypet
+    pip install ninst
+
 Licence
 ~~~~~~~
 
