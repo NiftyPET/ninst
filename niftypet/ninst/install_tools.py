@@ -125,6 +125,13 @@ def check_platform():
         raise SystemError("unknown operating system (OS).")
 
 
+def int_or_str(x):
+    try:
+        return int(x)
+    except ValueError:
+        return x
+
+
 def get_version(bin, required=1, errmsg=""):
     try:
         ver = check_output([bin, "--version"]).decode("U8")
@@ -140,7 +147,7 @@ def get_version(bin, required=1, errmsg=""):
         except Exception:
             log.warn(f"could not parse {bin} --version:\n{ver}")
             return True
-        return tuple(map(int, ver.split(".")))
+        return tuple(map(int_or_str, re.split("[.-]", ver)))
 
 
 def check_depends(git=1, cuda=1, cmake=1, ninja=1, **kwargs):
