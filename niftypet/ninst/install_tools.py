@@ -11,7 +11,7 @@ import platform
 import re
 import shutil
 import sys
-from subprocess import PIPE, CalledProcessError, check_call, run
+from subprocess import PIPE, CalledProcessError, check_output, run
 from textwrap import dedent
 
 if os.getenv("DISPLAY", False):
@@ -125,37 +125,90 @@ def check_platform():
         raise SystemError("unknown operating system (OS).")
 
 
-def check_depends():
-    log.info("checking if [CUDA], [git] and [cmake] are installed...")
-
-    outdct = {"cuda": True, "git": True, "cmake": True}
-
-    # -check if CUDA is installed
+def get_version(bin, required=1, errmsg=""):
     try:
-        check_call(["nvcc", "--version"])
+        ver = check_output([bin, "--version"]).decode("U8")
     except (CalledProcessError, FileNotFoundError):
-        log.error("CUDA (nvcc) does not seem to be installed!")
-        outdct["cuda"] = False
+        if required > 1:
+            log.error(errmsg or f"{bin} not found")
+        if required > 2:
+            raise
+        return False
+    else:
+        try:
+            ver = re.findall(r"\d+\.\d[-\d.\w]*", ver, flags=re.M)[-1]
+        except Exception:
+            log.warn(f"could not parse {bin} --version:\n{ver}")
+            return True
+        return tuple(map(int, ver.split(".")))
 
-    # -check if git is installed
-    try:
-        check_call(["git", "--version"])
-    except (CalledProcessError, FileNotFoundError):
-        log.error(
-            "git does not seem to be installed;"
-            " get it from: https://git-scm.com/download/"
+
+def check_depends(git=1, cuda=1, cmake=1, ninja=1, **kwargs):
+    """
+    Args:
+      **kwargs: values(int):
+        0: skip check
+        1: check, no warn if not found
+        2: required, warn if not found
+        3: required, error if not found
+
+    Returns:
+      kwargs: values(truthy):
+        False: not found
+        True: found
+        tuple: version numbers
+    """
+    outdct = {
+        k: v
+        for k, v in {
+            "git": git,
+            "cuda": cuda,
+            "cmake": cmake,
+            "ninja": ninja,
+            **kwargs,
+        }.items()
+        if v
+    }
+    log.info(f"checking if [{'], ['.join(outdct)}] are installed...")
+
+    if "cuda" in outdct:
+        outdct["cuda"] = get_version(
+            "nvcc", outdct["cuda"], "CUDA (nvcc) does not seem to be installed!"
         )
-        outdct["git"] = False
-
-    # -check if cmake is installed
-    try:
-        check_call(["cmake", "--version"])
-    except (CalledProcessError, FileNotFoundError):
-        log.error(
-            "cmake does not seem to be installed;"
-            " get it from: https://cmake.org/download/"
+    if "nvcc" in outdct:
+        outdct["nvcc"] = get_version(
+            "nvcc", outdct["nvcc"], "CUDA (nvcc) does not seem to be installed!"
         )
-        outdct["cmake"] = False
+    if "git" in outdct:
+        outdct["git"] = get_version(
+            "git",
+            outdct["git"],
+            (
+                "git does not seem to be installed;"
+                " get it from: https://git-scm.com/download"
+            ),
+        )
+    if "cmake" in outdct:
+        outdct["cmake"] = get_version(
+            "cmake",
+            outdct["cmake"],
+            ("cmake does not seem to be installed; try conda/pip install cmake"),
+        )
+    if "ninja" in outdct:
+        outdct["ninja"] = get_version(
+            "ninja",
+            outdct["ninja"],
+            ("ninja does not seem to be installed; try conda/pip install ninja"),
+        )
+
+    for bin in set(outdct) - {"cuda", "nvcc", "git", "cmake", "ninja"}:
+        # for p in os.getenv("PATH").split(os.path.pathsep):
+        #     if os.path.isfile(os.path.join(p, bin)):
+        #         outdct[bin] = True
+        #         break
+        # else:
+        #     outdct[bin] = False
+        outdct[bin] = get_version(bin, outdct[bin])
 
     return outdct
 
