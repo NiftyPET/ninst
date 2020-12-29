@@ -30,7 +30,8 @@ def test_check_platform():
 
 def test_check_depends():
     deps = tls.check_depends()
-    assert not {"cmake", "cuda", "git"} - deps.keys()
+    assert not {"cmake", "ninja", "cuda", "git"} - deps.keys()
+    assert any(isinstance(i, tuple) for i in deps.values())
 
 
 def test_check_version():

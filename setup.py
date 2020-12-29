@@ -5,15 +5,7 @@ from setuptools import setup
 from niftypet.ninst import cudasetup as cs
 from niftypet.ninst import install_tools as tls
 
-logging.basicConfig(level=logging.INFO)
-logroot = logging.getLogger("ninst")
-hand = logging.StreamHandler()
-formatter = logging.Formatter(
-    "%(levelname)s:%(asctime)s:%(name)s:%(funcName)s\n> %(message)s"
-)
-hand.setFormatter(formatter)
-logroot.addHandler(hand)
-log = logging.getLogger("ninst.setup")
+logging.basicConfig(level=logging.INFO, format=tls.LOG_FORMAT)
 
 
 tls.check_platform()
