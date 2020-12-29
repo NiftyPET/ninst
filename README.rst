@@ -26,7 +26,7 @@ It's also recommended (but not required) to use `conda`.
     # optional (Linux syntax) to avoid prompts
     export PATHTOOLS=$HOME/NiftyPET_tools
     # cross-platform install
-    conda create -n niftypet -c conda-forge python=3 numpy
+    conda create -n niftypet python=3
     conda activate niftypet
     pip install ninst
 
