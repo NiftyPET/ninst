@@ -10,15 +10,20 @@ import platform
 import re
 import shutil
 import sys
+import zipfile
+from functools import wraps
 from os import fspath, path
 from pathlib import Path
-from subprocess import PIPE, CalledProcessError, check_output, run
+from subprocess import CalledProcessError, check_output, run
 from textwrap import dedent
+from urllib import request
+from urllib.parse import urlparse
+
+from tqdm.auto import tqdm
 
 from . import cudasetup as cs
 
 if os.getenv("DISPLAY", False):
-    from functools import wraps
     from tkinter import Tk
     from tkinter.filedialog import askdirectory as ask
 
@@ -35,21 +40,6 @@ else:
     def askdir(title, initialdir):
         res = input(title + (f" [{initialdir}]: " if initialdir else ": "))
         return initialdir if res == "" else res
-
-
-def askdirectory(title="Folder", initialdir="~", name=""):
-    """
-    Args:
-      initialdir (str):  default: "~"
-    Returns (str):
-      one of (decreasing Precedence):
-      - `os.getenv(name)`
-      - `input()` or `tkinter.filedialog.askdirectory()`
-      - `initialdir`
-    """
-    initialdir = path.expanduser(initialdir)
-    res = os.getenv(name, None)
-    return askdir(title, initialdir) if res is None else res
 
 
 log = logging.getLogger(__name__)
@@ -82,6 +72,7 @@ dcm_ver = "v1.0.20200331"  # 'v1.0.20190902'
 # 'dcm2niix_27-Jun-2018_win.zip'
 # sha1_dcm =  '4b641113273d86ad73123816993092fc643ac62f'
 # dcm_ver = '1.0.20180622'
+http_dcm = {"Windows": http_dcm_win, "Linux": http_dcm_lin, "Darwin": http_dcm_mac}
 
 # source and build folder names
 dirsrc = "_src"
@@ -91,6 +82,7 @@ dirbld = Path("_bld")
 ncpu = multiprocessing.cpu_count()
 
 LOG_FORMAT = "%(levelname)s:%(asctime)s:%(name)s:%(funcName)s\n> %(message)s"
+CHUNK_SIZE = 2 ** 15  # 32 kiB
 
 
 class LogHandler(logging.StreamHandler):
@@ -100,6 +92,53 @@ class LogHandler(logging.StreamHandler):
         super().__init__(*args, **kwargs)
         fmt = logging.Formatter(LOG_FORMAT)
         self.setFormatter(fmt)
+
+
+def askdirectory(title="Folder", initialdir="~", name=""):
+    """
+    Args:
+      initialdir (str):  default: "~"
+    Returns (str):
+      one of (decreasing Precedence):
+      - `os.getenv(name)`
+      - `input()` or `tkinter.filedialog.askdirectory()`
+      - `initialdir`
+    """
+    initialdir = path.expanduser(initialdir)
+    res = os.getenv(name, None)
+    return askdir(title, initialdir) if res is None else res
+
+
+def urlopen_cached(url, outdir, fname=None, mode="rb"):
+    """
+    Download `url` to `outdir/fname`.
+    Cache based on `url` at `outdir/fname`.url
+
+    Args:
+      url (str): source
+      outdir (path-like): destination
+      fname (str): optional, auto-detected from `url` if not given
+      mode (str): for returned file object
+    Returns:
+      file
+    """
+    outdir = Path(outdir)
+    outdir.mkdir(exist_ok=True)
+    if fname is None:
+        fname = Path(urlparse(url).path).name
+    fout = outdir / fname
+    cache = outdir / f"{fname}.url"
+    if not fout.is_file() or not cache.is_file() or cache.read_text().strip() != url:
+        req = request.Request(url=url)
+        with request.urlopen(req) as raw:
+            with tqdm.wrapattr(raw, "read", total=getattr(raw, "length", None)) as fd:
+                with fout.open("wb") as fo:
+                    i = fd.read(CHUNK_SIZE)
+                    while i:
+                        fo.write(i)
+                        i = fd.read(CHUNK_SIZE)
+        cache.write_text(url)
+    return fout.open(mode)
 
 
 def query_yesno(question):
@@ -243,32 +282,29 @@ def check_version(Cnt, chcklst=None):
     # niftyreg reg_resample first
     if "RESPATH" in chcklst and "RESPATH" in Cnt:
         try:
-            p = run([Cnt["RESPATH"], "--version"], stdout=PIPE)
-            out = p.stdout.decode("utf-8")
+            out = check_output([Cnt["RESPATH"], "--version"]).decode("U8")
             if reg_ver in out:
                 output["RESPATH"] = True
-        except OSError:
+        except (CalledProcessError, FileNotFoundError):
             log.error("NiftyReg (reg_resample) either is NOT installed or is corrupt.")
 
     # niftyreg reg_aladin
     if "REGPATH" in chcklst and "REGPATH" in Cnt:
         try:
-            p = run([Cnt["REGPATH"], "--version"], stdout=PIPE)
-            out = p.stdout.decode("utf-8")
+            out = check_output([Cnt["REGPATH"], "--version"]).decode("U8")
             if reg_ver in out:
                 output["REGPATH"] = True
-        except OSError:
+        except (CalledProcessError, FileNotFoundError):
             log.error("NiftyReg (reg_aladin) either is NOT installed or is corrupt.")
 
     # dcm2niix
     if "DCM2NIIX" in chcklst and "DCM2NIIX" in Cnt:
         try:
-            p = run([Cnt["DCM2NIIX"], "-h"], stdout=PIPE)
-            out = p.stdout.decode("utf-8")
+            out = check_output([Cnt["DCM2NIIX"], "-h"]).decode("U8")
             ver_str = re.search(r"(?<=dcm2niiX version v)\d{1,2}.\d{1,2}.\d*", out)
             if ver_str and dcm_ver in ver_str.group(0):
                 output["DCM2NIIX"] = True
-        except OSError:
+        except (CalledProcessError, FileNotFoundError):
             log.error("dcm2niix either is NOT installed or is corrupt.")
 
     # hdw mu-map list
@@ -295,25 +331,14 @@ def download_dcm2niix(Cnt, dest):
     )
 
     # -create the installation folder
-    if not dest.is_dir():
-        dest.mkdir()
+    dest.mkdir(exist_ok=True)
     binpath = dest / "bin"
-    if not binpath.is_dir():
-        binpath.mkdir()
+    binpath.mkdir(exist_ok=True)
 
-    import urllib.error
-    import urllib.parse
-    import urllib.request
-    import zipfile
+    with urlopen_cached(http_dcm[platform.system()], dest) as fd:
+        with zipfile.ZipFile(fd) as zipf:
+            zipf.extractall(fspath(binpath))
 
-    http_dcm = {"Windows": http_dcm_win, "Linux": http_dcm_lin, "Darwin": http_dcm_mac}
-    urllib.request.urlretrieve(
-        http_dcm[platform.system()], fspath(dest / "dcm2niix.zip")
-    )
-
-    zipf = zipfile.ZipFile(fspath(dest / "dcm2niix.zip"), "r")
-    zipf.extractall(fspath(binpath))
-    zipf.close()
     Cnt["DCM2NIIX"] = fspath(next(binpath.glob("dcm2niix*")))
     # ensure the permissions are given to the executable
     os.chmod(Cnt["DCM2NIIX"], 755)
@@ -333,14 +358,12 @@ def install_tool(app, Cnt):
     # pick the target installation folder for tools
     if Cnt.get("PATHTOOLS", None):
         path_tools = Path(Cnt["PATHTOOLS"])
-        if not path_tools.is_dir():
-            path_tools.mkdir()
+        path_tools.mkdir(exist_ok=True)
     else:
         path_tools = Path(
             askdirectory(title="Path to place NiftyPET tools", name="PATHTOOLS")
         )
-        if not path_tools.is_dir():
-            path_tools.mkdir()
+        path_tools.mkdir(exist_ok=True)
         if path_tools.name != Cnt["DIRTOOLS"]:
             path_tools /= Cnt["DIRTOOLS"]
         Cnt["PATHTOOLS"] = fspath(path_tools)
@@ -357,8 +380,7 @@ def install_tool(app, Cnt):
         )
 
     # create the main tools folder
-    if not path_tools.is_dir():
-        path_tools.mkdir()
+    path_tools.mkdir(exist_ok=True)
     # identify the specific path for the requested app
     if app == "niftyreg":
         repo = repo_reg
@@ -389,8 +411,7 @@ def install_tool(app, Cnt):
     run(["git", "checkout", sha1])
     os.chdir(cwd)
 
-    if not dirbld.is_dir():
-        os.mkdir(dirbld)
+    dirbld.mkdir(exist_ok=True)
     os.chdir(dirbld)
     # run cmake with arguments
     if platform.system() == "Windows":
