@@ -122,7 +122,7 @@ def urlopen_cached(url, outdir, fname=None, mode="rb"):
     Returns:
       file
     """
-    outdir = Path(outdir)
+    outdir = Path(outdir).expanduser()
     outdir.mkdir(exist_ok=True)
     if fname is None:
         fname = Path(urlparse(url).path).name
