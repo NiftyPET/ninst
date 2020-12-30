@@ -83,7 +83,6 @@ dirbld = Path("_bld")
 ncpu = multiprocessing.cpu_count()
 
 LOG_FORMAT = "%(levelname)s:%(asctime)s:%(name)s:%(funcName)s\n> %(message)s"
-CHUNK_SIZE = 2 ** 15  # 32 kiB
 
 
 class LogHandler(logging.StreamHandler):
@@ -130,14 +129,10 @@ def urlopen_cached(url, outdir, fname=None, mode="rb"):
     fout = outdir / fname
     cache = outdir / f"{fname}.url"
     if not fout.is_file() or not cache.is_file() or cache.read_text().strip() != url:
-        req = request.Request(url=url)
-        with request.urlopen(req) as raw:
-            with tqdm.wrapattr(raw, "read", total=getattr(raw, "length", None)) as fd:
-                with fout.open("wb") as fo:
-                    i = fd.read(CHUNK_SIZE)
-                    while i:
-                        fo.write(i)
-                        i = fd.read(CHUNK_SIZE)
+        fi = request.urlopen(url)
+        with fout.open("wb") as raw:
+            with tqdm.wrapattr(raw, "write", total=getattr(fi, "length", None)) as fo:
+                copyfileobj(fi, fo)
         cache.write_text(url)
     return fout.open(mode)
 
@@ -145,21 +140,19 @@ def urlopen_cached(url, outdir, fname=None, mode="rb"):
 def extractall(fzip, dest, desc="Extracting"):
     """zipfile.Zipfile(fzip).extractall(dest) with progress"""
     dest = Path(dest).expanduser()
-    with ZipFile(fzip) as zipf:
-        with tqdm(
-            desc=desc,
-            unit="B",
-            unit_scale=True,
-            unit_divisor=1024,
-            total=sum(getattr(i, "file_size", 0) for i in zipf.infolist()),
-        ) as pbar:
-            for i in zipf.infolist():
-                if not getattr(i, "file_size", 0):  # directory
-                    zipf.extract(i, fspath(dest))
-                else:
-                    with zipf.open(i) as fi:
-                        with open(fspath(dest / i.filename), "wb") as fo:
-                            copyfileobj(CallbackIOWrapper(pbar.update, fi), fo)
+    with ZipFile(fzip) as zipf, tqdm(
+        desc=desc,
+        unit="B",
+        unit_scale=True,
+        unit_divisor=1024,
+        total=sum(getattr(i, "file_size", 0) for i in zipf.infolist()),
+    ) as pbar:
+        for i in zipf.infolist():
+            if not getattr(i, "file_size", 0):  # directory
+                zipf.extract(i, fspath(dest))
+            else:
+                with zipf.open(i) as fi, open(fspath(dest / i.filename), "wb") as fo:
+                    copyfileobj(CallbackIOWrapper(pbar.update, fi), fo)
 
 
 def query_yesno(question):
