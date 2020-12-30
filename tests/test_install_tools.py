@@ -57,3 +57,17 @@ def test_urlopen_cached(tmp_path):
 
     assert (dname / "README.rst").is_file()
     assert (dname / "README.rst.url").read_text() == url
+
+
+def test_extractall(tmp_path):
+    dname = tmp_path / "extractall"
+    assert not dname.exists()
+    url = "https://github.com/NiftyPET/NInst/archive/v0.6.0.zip"
+    with tls.urlopen_cached(url, dname) as fd:
+        tls.extractall(fd, dname)
+
+    assert (dname / "NInst-0.6.0" / "README.rst").is_file()
+    assert (
+        "NiftyPET Installation Tools"
+        in (dname / "NInst-0.6.0" / "README.rst").read_text()
+    )
