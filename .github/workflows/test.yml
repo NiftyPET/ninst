@@ -22,7 +22,7 @@ jobs:
         path: ~/.cache/pre-commit
         key: pre-commit|${{ env.PYSHA }}|${{ hashFiles('.pre-commit-config.yaml') }}
     - run: pip install -U .[dev]
-    - run: python setup.py sdist
+    - run: python setup.py sdist bdist_wheel
     - run: twine check dist/*
     - uses: reviewdog/action-setup@v1
     - if: github.event_name != 'schedule'

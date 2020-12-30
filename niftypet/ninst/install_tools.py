@@ -3,7 +3,6 @@ Install tools for NiftyPET including:
 * NiftyReg
 * dcm2niix
 """
-import glob
 import logging
 import multiprocessing
 import os
@@ -11,8 +10,12 @@ import platform
 import re
 import shutil
 import sys
+from os import fspath, path
+from pathlib import Path
 from subprocess import PIPE, CalledProcessError, check_output, run
 from textwrap import dedent
+
+from . import cudasetup as cs
 
 if os.getenv("DISPLAY", False):
     from functools import wraps
@@ -20,33 +23,34 @@ if os.getenv("DISPLAY", False):
     from tkinter.filedialog import askdirectory as ask
 
     @wraps(ask)
-    def askdirectory(*args, **kwargs):
+    def askdir(title, initialdir):
         Tk().withdraw()
-        res = ask(*args, **kwargs)
+        res = ask(title=title, initialdir=initialdir)
         Tk().destroy()
         return res
 
 
 else:
 
-    def askdirectory(title="Folder: ", initialdir=None, name=""):
-        """
-        decreasing precedence: os.environ[name], raw_input, initialdir
-
-        Args:
-          initialdir (str):  default: ~
-        """
-        if initialdir is None:
-            initialdir = os.path.expanduser("~")
-        path = os.environ.get(name, None)
-        if path is None:
-            path = input(title)
-        if path == "":
-            return initialdir
-        return path
+    def askdir(title, initialdir):
+        res = input(title + (f" [{initialdir}]: " if initialdir else ": "))
+        return initialdir if res == "" else res
 
 
-from . import cudasetup as cs
+def askdirectory(title="Folder", initialdir="~", name=""):
+    """
+    Args:
+      initialdir (str):  default: "~"
+    Returns (str):
+      one of (decreasing Precedence):
+      - `os.getenv(name)`
+      - `input()` or `tkinter.filedialog.askdirectory()`
+      - `initialdir`
+    """
+    initialdir = path.expanduser(initialdir)
+    res = os.getenv(name, None)
+    return askdir(title, initialdir) if res is None else res
+
 
 log = logging.getLogger(__name__)
 
@@ -81,7 +85,7 @@ dcm_ver = "v1.0.20200331"  # 'v1.0.20190902'
 
 # source and build folder names
 dirsrc = "_src"
-dirbld = "_bld"
+dirbld = Path("_bld")
 
 # number of threads
 ncpu = multiprocessing.cpu_count()
@@ -209,8 +213,8 @@ def check_depends(git=1, cuda=1, cmake=1, ninja=1, **kwargs):
         )
 
     for bin in set(outdct) - {"cuda", "nvcc", "git", "cmake", "ninja"}:
-        # for p in os.getenv("PATH").split(os.path.pathsep):
-        #     if os.path.isfile(os.path.join(p, bin)):
+        # for p in os.getenv("PATH").split(path.pathsep):
+        #     if path.isfile(path.join(p, bin)):
         #         outdct[bin] = True
         #         break
         # else:
@@ -270,7 +274,7 @@ def check_version(Cnt, chcklst=None):
     # hdw mu-map list
     if "HMUDIR" in chcklst and "HMUDIR" in Cnt:
         for hi in Cnt["HMULIST"]:
-            if os.path.isfile(os.path.join(Cnt["HMUDIR"], hi)):
+            if path.isfile(path.join(Cnt["HMUDIR"], hi)):
                 output["HMUDIR"] = True
             else:
                 output["HMUDIR"] = False
@@ -279,7 +283,7 @@ def check_version(Cnt, chcklst=None):
     return output
 
 
-def download_dcm2niix(Cnt, path):
+def download_dcm2niix(Cnt, dest):
     log.info(
         dedent(
             """\
@@ -291,11 +295,11 @@ def download_dcm2niix(Cnt, path):
     )
 
     # -create the installation folder
-    if not os.path.isdir(path):
-        os.mkdir(path)
-    binpath = os.path.join(path, "bin")
-    if not os.path.isdir(binpath):
-        os.mkdir(binpath)
+    if not dest.is_dir():
+        dest.mkdir()
+    binpath = dest / "bin"
+    if not binpath.is_dir():
+        binpath.mkdir()
 
     import urllib.error
     import urllib.parse
@@ -304,13 +308,13 @@ def download_dcm2niix(Cnt, path):
 
     http_dcm = {"Windows": http_dcm_win, "Linux": http_dcm_lin, "Darwin": http_dcm_mac}
     urllib.request.urlretrieve(
-        http_dcm[platform.system()], os.path.join(path, "dcm2niix.zip")
+        http_dcm[platform.system()], fspath(dest / "dcm2niix.zip")
     )
 
-    zipf = zipfile.ZipFile(os.path.join(path, "dcm2niix.zip"), "r")
-    zipf.extractall(os.path.join(path, "bin"))
+    zipf = zipfile.ZipFile(fspath(dest / "dcm2niix.zip"), "r")
+    zipf.extractall(fspath(binpath))
     zipf.close()
-    Cnt["DCM2NIIX"] = glob.glob(os.path.join(os.path.join(path, "bin"), "dcm2niix*"))[0]
+    Cnt["DCM2NIIX"] = fspath(next(binpath.glob("dcm2niix*")))
     # ensure the permissions are given to the executable
     os.chmod(Cnt["DCM2NIIX"], 755)
     # update the resources.py file in ~/.niftypet
@@ -327,104 +331,86 @@ def install_tool(app, Cnt):
     cwd = os.getcwd()
 
     # pick the target installation folder for tools
-    if "PATHTOOLS" in Cnt and Cnt["PATHTOOLS"] != "":
-        path_tools = Cnt["PATHTOOLS"]
-    elif "PATHTOOLS" not in Cnt or Cnt["PATHTOOLS"] != "":
-        if os.getenv("DISPLAY", False) and platform.system() in ["Linux", "Windows"]:
-            log.info("DISPLAY: {}".format(os.environ["DISPLAY"]))
-            dircore = askdirectory(
-                title="choose a place for NiftyPET tools",
-                initialdir=os.path.expanduser("~"),
-            )
-            # get the full (combined path)
-            path_tools = os.path.join(dircore, Cnt["DIRTOOLS"])
-        else:
-            try:
-                path_tools = askdirectory(
-                    title="Enter path for NiftyPET tools (registration, etc): ",
-                    name="PATHTOOLS",
-                )
-            except Exception:
-                log.warning(
-                    "manually enter the intended PATHTOOLS in resources.py"
-                    " located in ~/.niftypet/"
-                )
-                raise ValueError("\n e> could not get the path for NiftyPET_tools \n")
-        Cnt["PATHTOOLS"] = path_tools
-
+    if Cnt.get("PATHTOOLS", None):
+        path_tools = Path(Cnt["PATHTOOLS"])
+        if not path_tools.is_dir():
+            path_tools.mkdir()
     else:
-        if platform.system() == "Linux":
-            path_tools = os.path.join(os.path.expanduser("~"), Cnt["DIRTOOLS"])
-        elif platform.system() == "Windows":
-            path_tools = os.path.join(os.getenv("LOCALAPPDATA"), Cnt["DIRTOOLS"])
-        else:
-            log.error(
+        path_tools = Path(
+            askdirectory(title="Path to place NiftyPET tools", name="PATHTOOLS")
+        )
+        if not path_tools.is_dir():
+            path_tools.mkdir()
+        if path_tools.name != Cnt["DIRTOOLS"]:
+            path_tools /= Cnt["DIRTOOLS"]
+        Cnt["PATHTOOLS"] = fspath(path_tools)
+    if platform.system() not in {"Linux", "Windows"}:
+        raise SystemError(
+            dedent(
                 """\
-                \r=============================================================
-                \ronly Linux and Windows operating systems are supported
-                \rfor the additional tools installation!
-                \r=============================================================
-                """
+            =============================================================
+            Only Linux and Windows operating systems are supported
+            for installation of additional tools.
+            =============================================================
+            """
             )
-            raise SystemError("OS not supported!")
-        Cnt["PATHTOOLS"] = path_tools
+        )
 
     # create the main tools folder
-    if not os.path.isdir(path_tools):
-        os.mkdir(path_tools)
+    if not path_tools.is_dir():
+        path_tools.mkdir()
     # identify the specific path for the requested app
     if app == "niftyreg":
         repo = repo_reg
         sha1 = sha1_reg
-        path = os.path.join(path_tools, "niftyreg")
+        dest = path_tools / "niftyreg"
     elif app == "dcm2niix":
         repo = repo_dcm
         sha1 = sha1_dcm
-        path = os.path.join(path_tools, "dcm2niix")
+        dest = path_tools / "dcm2niix"
 
         if not Cnt["CMPL_DCM2NIIX"]:
             # avoid installing from source, instead download the full version:
-            Cnt = download_dcm2niix(Cnt, path)
+            Cnt = download_dcm2niix(Cnt, dest)
             return Cnt
+    else:
+        raise ValueError(f"unknown tool:{app}")
 
     # Check if the source folder exists and delete it, if it does
-    if os.path.isdir(path):
-        shutil.rmtree(path)
-    # Create an empty folder and enter it
-    os.mkdir(path)
-    os.chdir(path)
+    if dest.is_dir():
+        shutil.rmtree(fspath(dest))
+    dest.mkdir()
+    os.chdir(dest)
 
     # clone the git repository
     run(["git", "clone", repo, dirsrc])
     os.chdir(dirsrc)
     log.info("checking out the specific git version of the software...")
     run(["git", "checkout", sha1])
-    os.chdir("../")
+    os.chdir(cwd)
 
-    # create the building folder
-    if not os.path.isdir(dirbld):
+    if not dirbld.is_dir():
         os.mkdir(dirbld)
-    # go inside the build folder
     os.chdir(dirbld)
-
     # run cmake with arguments
     if platform.system() == "Windows":
-        cmd = [
-            "cmake",
-            "../" + dirsrc,
-            "-DBUILD_ALL_DEP=ON",
-            "-DCMAKE_INSTALL_PREFIX=" + path,
-            "-G",
-            Cnt["MSVC_VRSN"],
-        ]
-        run(cmd)
+        run(
+            [
+                "cmake",
+                "../" + dirsrc,
+                "-DBUILD_ALL_DEP=ON",
+                f"-DCMAKE_INSTALL_PREFIX={dest}",
+                "-G",
+                Cnt["MSVC_VRSN"],
+            ]
+        )
         run(["cmake", "--build", "./", "--config", "Release", "--target", "install"])
     elif platform.system() in ["Linux", "Darwin"]:
         cmd = [
             "cmake",
             "../" + dirsrc,
             "-DBUILD_ALL_DEP=ON",
-            "-DCMAKE_INSTALL_PREFIX=" + path,
+            f"-DCMAKE_INSTALL_PREFIX={dest}",
         ]
         if Cnt["CMAKE_TLS_PAR"] != "":
             cmd.append(Cnt["CMAKE_TLS_PAR"])
@@ -449,13 +435,9 @@ def install_tool(app, Cnt):
 
     if app == "niftyreg":
         try:
-            Cnt["RESPATH"] = glob.glob(
-                os.path.join(os.path.join(path, "bin"), "reg_resample*")
-            )[0]
-            Cnt["REGPATH"] = glob.glob(
-                os.path.join(os.path.join(path, "bin"), "reg_aladin*")
-            )[0]
-        except IndexError:
+            Cnt["RESPATH"] = fspath(next((dest / "bin").glob("reg_resample*")))
+            Cnt["REGPATH"] = fspath(next((dest / "bin").glob("reg_aladin*")))
+        except StopIteration:
             log.error("NiftyReg has NOT been successfully installed.")
             raise SystemError("Failed Installation (NiftyReg)")
         # updated the file resources.py
@@ -465,19 +447,16 @@ def install_tool(app, Cnt):
         if not all(chck_niftyreg.values()):
             log.error("NiftyReg has NOT been successfully installed.")
             raise SystemError("Failed Installation (NiftyReg)")
-
     elif app == "dcm2niix":
         try:
-            Cnt["DCM2NIIX"] = glob.glob(
-                os.path.join(os.path.join(path, "bin"), "dcm2niix*")
-            )[0]
-        except IndexError:
+            Cnt["DCM2NIIX"] = fspath(next((dest / "bin").glob("dcm2niix*")))
+        except StopIteration:
             log.error("dcm2niix has NOT been successfully installed.")
-            Cnt = download_dcm2niix(Cnt, path)
+            Cnt = download_dcm2niix(Cnt, dest)
         # check the installation:
         if not check_version(Cnt, chcklst=["DCM2NIIX"]):
             log.error("dcm2niix has NOT been successfully compiled from github.")
-            Cnt = download_dcm2niix(Cnt, path)
+            Cnt = download_dcm2niix(Cnt, dest)
     return Cnt
 
 
@@ -488,10 +467,10 @@ def update_resources(Cnt):
 
     # get the local path to NiftyPET resources.py
     path_resources = cs.path_niftypet_local()
-    resources_file = os.path.join(path_resources, "resources.py")
+    resources_file = path.join(path_resources, "resources.py")
 
     # update resources.py
-    if os.path.isfile(resources_file):
+    if path.isfile(resources_file):
         f = open(resources_file, "r")
         rsrc = f.read()
         f.close()
