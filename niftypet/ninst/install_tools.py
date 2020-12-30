@@ -8,18 +8,19 @@ import multiprocessing
 import os
 import platform
 import re
-import shutil
 import sys
-import zipfile
 from functools import wraps
 from os import fspath, path
 from pathlib import Path
+from shutil import copyfileobj, rmtree
 from subprocess import CalledProcessError, check_output, run
 from textwrap import dedent
 from urllib import request
 from urllib.parse import urlparse
+from zipfile import ZipFile
 
 from tqdm.auto import tqdm
+from tqdm.utils import CallbackIOWrapper
 
 from . import cudasetup as cs
 
@@ -139,6 +140,26 @@ def urlopen_cached(url, outdir, fname=None, mode="rb"):
                         i = fd.read(CHUNK_SIZE)
         cache.write_text(url)
     return fout.open(mode)
+
+
+def extractall(fzip, dest, desc="Extracting"):
+    """zipfile.Zipfile(fzip).extractall(dest) with progress"""
+    dest = Path(dest).expanduser()
+    with ZipFile(fzip) as zipf:
+        with tqdm(
+            desc=desc,
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+            total=sum(getattr(i, "file_size", 0) for i in zipf.infolist()),
+        ) as pbar:
+            for i in zipf.infolist():
+                if not getattr(i, "file_size", 0):  # directory
+                    zipf.extract(i, fspath(dest))
+                else:
+                    with zipf.open(i) as fi:
+                        with open(fspath(dest / i.filename), "wb") as fo:
+                            copyfileobj(CallbackIOWrapper(pbar.update, fi), fo)
 
 
 def query_yesno(question):
@@ -336,8 +357,7 @@ def download_dcm2niix(Cnt, dest):
     binpath.mkdir(exist_ok=True)
 
     with urlopen_cached(http_dcm[platform.system()], dest) as fd:
-        with zipfile.ZipFile(fd) as zipf:
-            zipf.extractall(fspath(binpath))
+        extractall(fd, binpath)
 
     Cnt["DCM2NIIX"] = fspath(next(binpath.glob("dcm2niix*")))
     # ensure the permissions are given to the executable
@@ -400,7 +420,7 @@ def install_tool(app, Cnt):
 
     # Check if the source folder exists and delete it, if it does
     if dest.is_dir():
-        shutil.rmtree(fspath(dest))
+        rmtree(fspath(dest))
     dest.mkdir()
     os.chdir(dest)
 
