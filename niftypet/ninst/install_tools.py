@@ -77,7 +77,7 @@ http_dcm = {"Windows": http_dcm_win, "Linux": http_dcm_lin, "Darwin": http_dcm_m
 
 # source and build folder names
 dirsrc = "_src"
-dirbld = Path("_bld")
+dirbld = "_bld"
 
 # number of threads
 ncpu = multiprocessing.cpu_count()
@@ -365,9 +365,6 @@ def install_tool(app, Cnt):
     Install the requested software from the git 'repo'
     and check out the version given by 'sha1'.
     """
-    # get the current working directory
-    cwd = os.getcwd()
-
     # pick the target installation folder for tools
     if Cnt.get("PATHTOOLS", None):
         path_tools = Path(Cnt["PATHTOOLS"])
@@ -398,11 +395,11 @@ def install_tool(app, Cnt):
     if app == "niftyreg":
         repo = repo_reg
         sha1 = sha1_reg
-        dest = path_tools / "niftyreg"
+        dest = path_tools.resolve() / "niftyreg"
     elif app == "dcm2niix":
         repo = repo_dcm
         sha1 = sha1_dcm
-        dest = path_tools / "dcm2niix"
+        dest = path_tools.resolve() / "dcm2niix"
 
         if not Cnt["CMPL_DCM2NIIX"]:
             # avoid installing from source, instead download the full version:
@@ -415,40 +412,40 @@ def install_tool(app, Cnt):
     if dest.is_dir():
         rmtree(fspath(dest))
     dest.mkdir()
-    os.chdir(dest)
 
     # clone the git repository
-    run(["git", "clone", repo, dirsrc])
-    os.chdir(dirsrc)
+    run(["git", "clone", repo, fspath(dest / dirsrc)])
     log.info("checking out the specific git version of the software...")
-    run(["git", "checkout", sha1])
-    os.chdir(cwd)
+    run(["git", "-C", fspath(dest / dirsrc), "checkout", sha1])
 
-    dirbld.mkdir(exist_ok=True)
-    os.chdir(dirbld)
+    (dest / dirbld).mkdir(exist_ok=True)
     # run cmake with arguments
     if platform.system() == "Windows":
         run(
             [
                 "cmake",
-                "../" + dirsrc,
+                fspath(dest / dirsrc),
                 "-DBUILD_ALL_DEP=ON",
                 f"-DCMAKE_INSTALL_PREFIX={dest}",
                 "-G",
                 Cnt["MSVC_VRSN"],
-            ]
+            ],
+            cwd=fspath(dest / dirbld),
         )
-        run(["cmake", "--build", "./", "--config", "Release", "--target", "install"])
+        run(
+            ["cmake", "--build", "./", "--config", "Release", "--target", "install"],
+            cwd=fspath(dest / dirbld),
+        )
     elif platform.system() in ["Linux", "Darwin"]:
         cmd = [
             "cmake",
-            "../" + dirsrc,
+            fspath(dest / dirsrc),
             "-DBUILD_ALL_DEP=ON",
             f"-DCMAKE_INSTALL_PREFIX={dest}",
         ]
         if Cnt["CMAKE_TLS_PAR"] != "":
             cmd.append(Cnt["CMAKE_TLS_PAR"])
-        run(cmd)
+        run(cmd, cwd=fspath(dest / dirbld))
         run(
             [
                 "cmake",
@@ -461,11 +458,9 @@ def install_tool(app, Cnt):
                 "--",
                 "-j",
                 str(ncpu),
-            ]
+            ],
+            cwd=fspath(dest / dirbld),
         )
-
-    # restore the current working directory
-    os.chdir(cwd)
 
     if app == "niftyreg":
         try:
