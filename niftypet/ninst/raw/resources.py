@@ -158,7 +158,7 @@ SZ_VOXZ = 0.203125
 # ~~~
 SIGMA_RM = 0
 
-#> radius PSF kernel size used in CUDA convolution
+# > radius PSF kernel size used in CUDA convolution
 RSZ_PSF_KRNL = 8
 
 # ~~~
@@ -383,7 +383,7 @@ def get_mmr_constants():
         "SO_VXY": SO_VXY,
         "SO_VXX": SO_VXX,
         "SIGMA_RM": SIGMA_RM,  # resolution modelling sigma
-        "RSZ_PSF_KRNL":RSZ_PSF_KRNL, # radius PSF kernel size used in CUDA convolution
+        "RSZ_PSF_KRNL": RSZ_PSF_KRNL,  # radius PSF kernel size used in CUDA convolution
         "NTT": NTT,
         "NTV": NTV,
         "NSEG0": SEG0,
