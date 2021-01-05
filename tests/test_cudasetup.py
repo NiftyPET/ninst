@@ -10,8 +10,9 @@ def test_find_cuda(caplog):
 
 
 def test_dev_setup(caplog, nvml):
-    ccs = cs.dev_setup()
-    assert list(map(int, ccs))
+    with caplog.at_level(logging.WARNING):
+        ccstr = cs.dev_setup()
+    assert ccstr or caplog.record_tuples
 
 
 def test_resources_setup(caplog):
