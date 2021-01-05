@@ -158,6 +158,9 @@ SZ_VOXZ = 0.203125
 # ~~~
 SIGMA_RM = 0
 
+# > radius PSF kernel size used in CUDA convolution
+RSZ_PSF_KRNL = 8
+
 # ~~~
 # inverse size
 SZ_VOXZi = round(1 / SZ_VOXZ, 6)
@@ -356,7 +359,7 @@ def get_mmr_constants():
         "TFOV2": TFOV2,  # squared radius of TFOV
         "RNG_STRT": RNG_STRT,  # limit axial extension by defining start and end ring
         "RNG_END": RNG_END,  # only works with span-1 (Cnt['SPN']==1)
-        "SS_IMZ": SS_IMZ,  # Scatter mu-map iamge size
+        "SS_IMZ": SS_IMZ,  # Scatter mu-map image size
         "SS_IMY": SS_IMY,
         "SS_IMX": SS_IMX,
         "SS_VXZ": SS_VXZ,
@@ -380,6 +383,7 @@ def get_mmr_constants():
         "SO_VXY": SO_VXY,
         "SO_VXX": SO_VXX,
         "SIGMA_RM": SIGMA_RM,  # resolution modelling sigma
+        "RSZ_PSF_KRNL": RSZ_PSF_KRNL,  # radius PSF kernel size used in CUDA convolution
         "NTT": NTT,
         "NTV": NTV,
         "NSEG0": SEG0,

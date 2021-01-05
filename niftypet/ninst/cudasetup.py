@@ -97,20 +97,24 @@ def dev_setup():
 
     # get all constants and check if device is already chosen
     Cnt = resources.get_setup()
-    if "CCARCH" in Cnt and "DEVID" in Cnt:
-        log.info("using this CUDA architecture(s): {}".format(Cnt["CCARCH"]))
-        return Cnt["CCARCH"]
+    # if "CCARCH" in Cnt and "DEVID" in Cnt:
+    #     log.info("using this CUDA architecture(s): {}".format(Cnt["CCARCH"]))
+    #     return Cnt["CCARCH"]
 
     from miutil import cuinfo
 
     if "DEVID" in Cnt:
-        ccstr = cuinfo.nvcc_flags(int(Cnt["DEVID"]))
-        devid = Cnt["DEVID"]
+        devid = int(Cnt["DEVID"])
+        ccstr = cuinfo.nvcc_flags(devid)
+        ccs = ["{:d}{:d}".format(*cuinfo.compute_capability(devid))]
     else:
         devid = cuinfo.num_devices() - 1
         if devid == -1:
             return ""
         ccstr = ";".join(set(map(cuinfo.nvcc_flags, range(devid + 1))))
+        ccs = sorted(
+            {"{:d}{:d}".format(*cuinfo.compute_capability(i)) for i in range(devid + 1)}
+        )
 
     # passing this setting to resources.py
     fpth = os.path.join(
@@ -131,7 +135,7 @@ def dev_setup():
             f.write(k + " = " + v + "\n")
         f.write(rsrc[i1:])
 
-    return ccstr
+    return ccs
 
 
 def resources_setup(gpu=True):
