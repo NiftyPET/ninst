@@ -26,8 +26,7 @@ It's also recommended (but not required) to use `conda`.
     # optional (Linux syntax) to avoid prompts
     export PATHTOOLS=$HOME/NiftyPET_tools
     # cross-platform install
-    conda create -n niftypet python=3
-    conda activate niftypet
+    conda install -c conda-forge python=3
     pip install ninst
 
 Licence
@@ -35,7 +34,7 @@ Licence
 
 |Licence|
 
-Copyright 2018-20
+Copyright 2018-21
 
 - `Casper O. da Costa-Luis <https://github.com/casperdcl>`__ @ King's College London
 - `Pawel J. Markiewicz <https://github.com/pjmark>`__ @ University College London
@@ -43,7 +42,7 @@ Copyright 2018-20
 
 .. |Docs| image:: https://readthedocs.org/projects/niftypet/badge/?version=latest
    :target: https://niftypet.readthedocs.io/en/latest/?badge=latest
-.. |Licence| image:: https://img.shields.io/pypi/l/ninst.svg
+.. |Licence| image:: https://img.shields.io/pypi/l/ninst.svg?label=licence
    :target: https://raw.githubusercontent.com/NiftyPET/NInst/master/LICENCE
 .. |Tests| image:: https://img.shields.io/github/workflow/status/NiftyPET/NInst/Test?logo=GitHub
    :target: https://github.com/NiftyPET/NInst/actions
