@@ -2,11 +2,12 @@
 *.so
 __pycache__/
 
+MANIFEST
 /niftypet/ninst/_dist_ver.py
-/.eggs/
 /build/
 /dist/
 /*.egg*/
+/.eggs/
 
 /.coverage*
 /coverage.xml

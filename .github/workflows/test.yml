@@ -9,8 +9,6 @@ jobs:
     name: Check py${{ matrix.python }}
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python }}
