@@ -43,14 +43,14 @@ else:
 log = logging.getLogger(__name__)
 
 # NiftyReg
-repo_reg = "https://github.com/KCL-BMEIS/niftyreg"
+repo_reg = "https://github.com/NiftyPET/niftyreg"
 # repo_reg = 'https://cmiclab.cs.ucl.ac.uk/mmodat/niftyreg.git'
 # 'git://git.code.sf.net/p/niftyreg/git'
-sha1_reg = "731a565bd42ca97ff5968adb1c06133ea72f0856"
+sha1_reg = "gcc9-omp-fix"
 # 'f673b7837c0824f55dedb1534b32b55bf68a2823'
 # '6bf84b492050a4b9a93431209babeab9bc8f14da'
 # '62af1ca6777379316669b6934889c19863eaa708'
-reg_ver = "1.5.61"
+reg_ver = "1.5.68"
 
 # dcm2niix
 repo_dcm = "https://github.com/rordenlab/dcm2niix"
