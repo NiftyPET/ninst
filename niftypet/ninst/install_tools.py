@@ -384,7 +384,17 @@ def install_tool(app, Cnt):
             cwd=fspath(dest / dirbld),
         )
         run(
-            ["cmake", "--build", "./", "--config", "Release", "--target", "install"],
+            [
+                "cmake",
+                "--build",
+                "./",
+                "-j",
+                "8",
+                "--config",
+                "Release",
+                "--target",
+                "install",
+            ],
             cwd=fspath(dest / dirbld),
         )
     elif platform.system() in ["Linux", "Darwin"]:
@@ -402,6 +412,8 @@ def install_tool(app, Cnt):
                 "cmake",
                 "--build",
                 "./",
+                "-j",
+                "8",
                 "--config",
                 "Release",
                 "--target",
