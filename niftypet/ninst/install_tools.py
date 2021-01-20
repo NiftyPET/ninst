@@ -12,15 +12,12 @@ import sys
 from functools import wraps
 from os import fspath, path
 from pathlib import Path
-from shutil import copyfileobj, rmtree
+from shutil import rmtree
 from subprocess import CalledProcessError, check_output, run
 from textwrap import dedent
-from urllib import request
-from urllib.parse import urlparse
-from zipfile import ZipFile
 
-from tqdm.auto import tqdm
-from tqdm.utils import CallbackIOWrapper
+from miutil.fdio import extractall
+from miutil.web import urlopen_cached
 
 from . import cudasetup as cs
 
@@ -46,14 +43,14 @@ else:
 log = logging.getLogger(__name__)
 
 # NiftyReg
-repo_reg = "https://github.com/KCL-BMEIS/niftyreg"
+repo_reg = "https://github.com/NiftyPET/niftyreg"
 # repo_reg = 'https://cmiclab.cs.ucl.ac.uk/mmodat/niftyreg.git'
 # 'git://git.code.sf.net/p/niftyreg/git'
-sha1_reg = "731a565bd42ca97ff5968adb1c06133ea72f0856"
+sha1_reg = "gcc9-omp-fix"
 # 'f673b7837c0824f55dedb1534b32b55bf68a2823'
 # '6bf84b492050a4b9a93431209babeab9bc8f14da'
 # '62af1ca6777379316669b6934889c19863eaa708'
-reg_ver = "1.5.61"
+reg_ver = "1.5.68"
 
 # dcm2niix
 repo_dcm = "https://github.com/rordenlab/dcm2niix"
@@ -107,52 +104,6 @@ def askdirectory(title="Folder", initialdir="~", name=""):
     initialdir = path.expanduser(initialdir)
     res = os.getenv(name, None)
     return askdir(title, initialdir) if res is None else res
-
-
-def urlopen_cached(url, outdir, fname=None, mode="rb"):
-    """
-    Download `url` to `outdir/fname`.
-    Cache based on `url` at `outdir/fname`.url
-
-    Args:
-      url (str): source
-      outdir (path-like): destination
-      fname (str): optional, auto-detected from `url` if not given
-      mode (str): for returned file object
-    Returns:
-      file
-    """
-    outdir = Path(outdir).expanduser()
-    outdir.mkdir(exist_ok=True)
-    if fname is None:
-        fname = Path(urlparse(url).path).name
-    fout = outdir / fname
-    cache = outdir / f"{fname}.url"
-    if not fout.is_file() or not cache.is_file() or cache.read_text().strip() != url:
-        fi = request.urlopen(url)
-        with fout.open("wb") as raw:
-            with tqdm.wrapattr(raw, "write", total=getattr(fi, "length", None)) as fo:
-                copyfileobj(fi, fo)
-        cache.write_text(url)
-    return fout.open(mode)
-
-
-def extractall(fzip, dest, desc="Extracting"):
-    """zipfile.Zipfile(fzip).extractall(dest) with progress"""
-    dest = Path(dest).expanduser()
-    with ZipFile(fzip) as zipf, tqdm(
-        desc=desc,
-        unit="B",
-        unit_scale=True,
-        unit_divisor=1024,
-        total=sum(getattr(i, "file_size", 0) for i in zipf.infolist()),
-    ) as pbar:
-        for i in zipf.infolist():
-            if not getattr(i, "file_size", 0):  # directory
-                zipf.extract(i, fspath(dest))
-            else:
-                with zipf.open(i) as fi, open(fspath(dest / i.filename), "wb") as fo:
-                    copyfileobj(CallbackIOWrapper(pbar.update, fi), fo)
 
 
 def query_yesno(question):
@@ -433,7 +384,17 @@ def install_tool(app, Cnt):
             cwd=fspath(dest / dirbld),
         )
         run(
-            ["cmake", "--build", "./", "--config", "Release", "--target", "install"],
+            [
+                "cmake",
+                "--build",
+                "./",
+                "-j",
+                "8",
+                "--config",
+                "Release",
+                "--target",
+                "install",
+            ],
             cwd=fspath(dest / dirbld),
         )
     elif platform.system() in ["Linux", "Darwin"]:
@@ -451,6 +412,8 @@ def install_tool(app, Cnt):
                 "cmake",
                 "--build",
                 "./",
+                "-j",
+                "8",
                 "--config",
                 "Release",
                 "--target",

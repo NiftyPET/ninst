@@ -1,6 +1,6 @@
 from io import StringIO
 
-import pytest
+from pytest import raises
 
 from niftypet.ninst import install_tools as tls
 
@@ -43,31 +43,6 @@ def test_install_tool(tmp_path, monkeypatch):
     monkeypatch.setenv("PATHTOOLS", str(dname))
     Cnt = {"DIRTOOLS": "NiftyPET_tools_test"}
     assert not dname.exists()
-    with pytest.raises(ValueError):
+    with raises(ValueError):
         tls.install_tool("", Cnt)
     assert (dname / Cnt["DIRTOOLS"]).is_dir()
-
-
-def test_urlopen_cached(tmp_path):
-    dname = tmp_path / "urlopen_cached"
-    assert not dname.exists()
-    url = "https://github.com/NiftyPET/NInst/raw/master/README.rst"
-    with tls.urlopen_cached(url, dname, mode="r") as fd:
-        assert "NiftyPET Installation Tools" in fd.read()
-
-    assert (dname / "README.rst").is_file()
-    assert (dname / "README.rst.url").read_text() == url
-
-
-def test_extractall(tmp_path):
-    dname = tmp_path / "extractall"
-    assert not dname.exists()
-    url = "https://github.com/NiftyPET/NInst/archive/v0.6.0.zip"
-    with tls.urlopen_cached(url, dname) as fd:
-        tls.extractall(fd, dname)
-
-    assert (dname / "NInst-0.6.0" / "README.rst").is_file()
-    assert (
-        "NiftyPET Installation Tools"
-        in (dname / "NInst-0.6.0" / "README.rst").read_text()
-    )
