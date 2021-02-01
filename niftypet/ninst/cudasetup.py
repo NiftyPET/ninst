@@ -23,7 +23,8 @@ log = logging.getLogger(__name__)
 
 prefix = sys.prefix
 pyhdr = get_python_inc()  # Python header paths
-mincc = 35  # minimum required CUDA compute capability
+minc_c = 3, 5  # minimum required CUDA compute capability
+mincc = minc_c[0] * 10 + minc_c[1]
 
 
 def path_niftypet_local():
@@ -103,17 +104,40 @@ def dev_setup():
 
     from miutil import cuinfo
 
+    # map from CUDA device order (CC) to NVML order (PCI bus)
+    nvml_id = [
+        i
+        for _, i in sorted(
+            ((cuinfo.compute_capability(i), i) for i in range(cuinfo.num_devices())),
+            reverse=True,
+        )
+    ]
     if "DEVID" in Cnt:
         devid = int(Cnt["DEVID"])
-        ccstr = cuinfo.nvcc_flags(devid)
-        ccs = ["{:d}{:d}".format(*cuinfo.compute_capability(devid))]
+        ccstr = cuinfo.nvcc_flags(nvml_id[devid])
+        ccs = ["{:d}{:d}".format(*cuinfo.compute_capability(nvml_id[devid]))]
     else:
-        devid = cuinfo.num_devices() - 1
-        if devid == -1:
+        devid = 0
+        devs = cuinfo.num_devices()
+        if devs < 1:
             return ""
-        ccstr = ";".join(set(map(cuinfo.nvcc_flags, range(devid + 1))))
+        ccstr = ";".join(
+            sorted(
+                {
+                    cuinfo.nvcc_flags(i)
+                    for i in range(devs)
+                    if cuinfo.compute_capability(i) >= minc_c
+                }
+            )
+        )
+        if not ccstr:
+            return ""
         ccs = sorted(
-            {"{:d}{:d}".format(*cuinfo.compute_capability(i)) for i in range(devid + 1)}
+            {
+                "{:d}{:d}".format(*cuinfo.compute_capability(i))
+                for i in range(devs)
+                if cuinfo.compute_capability(i) >= minc_c
+            }
         )
 
     # passing this setting to resources.py
