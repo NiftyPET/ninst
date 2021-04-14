@@ -1,6 +1,7 @@
 """Resources file for NiftyPET NIPET and NIMPA etc."""
 __author__ = ("Pawel J. Markiewicz", "Casper O. da Costa-Luis")
 __copyright__ = "Copyright 2018-20"
+
 from math import ceil, pi
 
 try:
@@ -103,6 +104,15 @@ SPAN = 11
 
 RNG_STRT = 0
 RNG_END = 64
+
+
+# ------------------------------------------------------
+#> scatter axial ring definition
+sct_irng = [0, 10, 19, 28, 35, 44, 53, 63]
+#> resulting number of rings used for scatter modelling
+NSRNG = len(sct_irng)
+# ------------------------------------------------------
+
 
 # no of sinos in a segment out of 11 segments
 seg = array([127, 115, 115, 93, 93, 71, 71, 49, 49, 27, 27])
@@ -404,17 +414,22 @@ def get_mmr_constants():
         "LLD": LLD,  # lower energy threashold
         "E511": E511,
         "ER": ER,  # energy resolution
-        "COSUPSMX": COSUPSMX,  # cosine of max allowed scatter angle
-        "NCOS": NCOS,  # number of cos samples for LUT
-        "COSSTP": COSSTP,  # cosine step
-        "ICOSSTP": ICOSSTP,  # inverse of cosine step
-        "ETHRLD": ETHRLD,  # intensity emission image threshold (for scatter modelling)
-        "CLGHT": CLGHT,  # speed of light [cm/s]
-        "CWND": CWND,  # coincidence time window [ps]
-        "TOFBINN": TOFBINN,  # number of TOF bins
-        "TOFBINS": TOFBINS,  # TOF bin width [ps]
+
+        #> scatter:
+        'SIRNG':sct_irng,       # scatter ring indices
+        'NSRNG':NSRNG,          # number of rings for scatter modelling 
+        "COSUPSMX": COSUPSMX,   # cosine of max allowed scatter angle
+        "NCOS": NCOS,           # number of cos samples for LUT
+        "COSSTP": COSSTP,       # cosine step
+        "ICOSSTP": ICOSSTP,     # inverse of cosine step
+        "ETHRLD": ETHRLD,       # intensity emission image threshold (for scatter modelling)
+        "CLGHT": CLGHT,         # speed of light [cm/s]
+        "CWND": CWND,           # coincidence time window [ps]
+        "TOFBINN": TOFBINN,     # number of TOF bins
+        "TOFBINS": TOFBINS,     # TOF bin width [ps]
         "TOFBIND": TOFBIND,
         "ITOFBIND": ITOFBIND,
+
         # affine and image size for the reconstructed image,
         # assuming the centre of voxels in mm
         "AFFINE": array(
