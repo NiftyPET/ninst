@@ -107,9 +107,9 @@ RNG_END = 64
 
 
 # ------------------------------------------------------
-#> scatter axial ring definition
+# > scatter axial ring definition
 sct_irng = [0, 10, 19, 28, 35, 44, 53, 63]
-#> resulting number of rings used for scatter modelling
+# > resulting number of rings used for scatter modelling
 NSRNG = len(sct_irng)
 # ------------------------------------------------------
 
@@ -414,22 +414,20 @@ def get_mmr_constants():
         "LLD": LLD,  # lower energy threashold
         "E511": E511,
         "ER": ER,  # energy resolution
-
-        #> scatter:
-        'SIRNG':sct_irng,       # scatter ring indices
-        'NSRNG':NSRNG,          # number of rings for scatter modelling 
-        "COSUPSMX": COSUPSMX,   # cosine of max allowed scatter angle
-        "NCOS": NCOS,           # number of cos samples for LUT
-        "COSSTP": COSSTP,       # cosine step
-        "ICOSSTP": ICOSSTP,     # inverse of cosine step
-        "ETHRLD": ETHRLD,       # intensity emission image threshold (for scatter modelling)
-        "CLGHT": CLGHT,         # speed of light [cm/s]
-        "CWND": CWND,           # coincidence time window [ps]
-        "TOFBINN": TOFBINN,     # number of TOF bins
-        "TOFBINS": TOFBINS,     # TOF bin width [ps]
+        # > scatter:
+        "SIRNG": sct_irng,  # scatter ring indices
+        "NSRNG": NSRNG,  # number of rings for scatter modelling
+        "COSUPSMX": COSUPSMX,  # cosine of max allowed scatter angle
+        "NCOS": NCOS,  # number of cos samples for LUT
+        "COSSTP": COSSTP,  # cosine step
+        "ICOSSTP": ICOSSTP,  # inverse of cosine step
+        "ETHRLD": ETHRLD,  # intensity emission image threshold (for scatter modelling)
+        "CLGHT": CLGHT,  # speed of light [cm/s]
+        "CWND": CWND,  # coincidence time window [ps]
+        "TOFBINN": TOFBINN,  # number of TOF bins
+        "TOFBINS": TOFBINS,  # TOF bin width [ps]
         "TOFBIND": TOFBIND,
         "ITOFBIND": ITOFBIND,
-
         # affine and image size for the reconstructed image,
         # assuming the centre of voxels in mm
         "AFFINE": array(
