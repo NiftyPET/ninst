@@ -131,7 +131,7 @@ maxrd = array([5, -6, 16, -17, 27, -28, 38, -39, 49, -50, 60])
 NTT = 10
 
 # > all voxels intersected by a given LOR
-NTV = 907
+NTV = 1807
 # ------------------------------------------------------
 
 # number of direct sinograms (i.e., for segment 0)
