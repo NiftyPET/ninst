@@ -11,3 +11,4 @@ MANIFEST
 
 /.coverage*
 /coverage.xml
+/.pytest_cache/
