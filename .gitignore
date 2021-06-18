@@ -1,14 +1,11 @@
 *.py[co]
 *.so
 __pycache__/
-
-MANIFEST
 /niftypet/ninst/_dist_ver.py
+MANIFEST
+/*.egg*/
 /build/
 /dist/
-/*.egg*/
-/.eggs/
-
 /.coverage*
 /coverage.xml
 /.pytest_cache/
