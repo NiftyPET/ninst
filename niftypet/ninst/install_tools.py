@@ -36,7 +36,10 @@ if os.getenv("DISPLAY", False):
 else:
 
     def askdir(title, initialdir):
-        res = input(title + (f" [{initialdir}]: " if initialdir else ": "))
+        try:
+            res = input(title + (f" [{initialdir}]: " if initialdir else ": "))
+        except EOFError:
+            res = ""
         return initialdir if res == "" else res
 
 
