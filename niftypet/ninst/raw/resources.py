@@ -574,6 +574,73 @@ def get_mmr_constants():
         "SSE_IMX": SSE_IMX,
         "SSE_VXZ": SSE_VXZ,
         "SSE_VXY": SSE_VXY,
+<<<<<<< HEAD
+=======
+        "SZ_IMZ": SZ_IMZ,  # GPU optimised image size
+        "SZ_IMY": SZ_IMY,
+        "SZ_IMX": SZ_IMX,
+        "SZ_VOXZ": SZ_VOXZ,
+        "SZ_VOXY": SZ_VOXY,
+        "SZ_VOXZi": SZ_VOXZi,
+        "SO_IMZ": SO_IMZ,  # Original image size (from Siemens)
+        "SO_IMY": SO_IMY,
+        "SO_IMX": SO_IMX,
+        "SO_VXZ": SO_VXZ,
+        "SO_VXY": SO_VXY,
+        "SO_VXX": SO_VXX,
+        "SIGMA_RM": SIGMA_RM,  # resolution modelling sigma
+        "RSZ_PSF_KRNL": RSZ_PSF_KRNL,  # radius PSF kernel size used in CUDA convolution
+        "NTT": NTT,
+        "NTV": NTV,
+        "NSEG0": SEG0,
+        "R_RING": RE,  # effective ring radius
+        "R_2": RE_2,
+        "IR_RING": IRE,
+        "R": R,
+        "SEG": seg,
+        "MNRD": minrd,
+        "MXRD": maxrd,
+        # > scatter moved to scatter LUTs script in sct folder
+        # 'NSRNG':NSRNG, # number of scatter rings for modelling
+        # 'SCTRNG':sct_irng, # scatter ring indexes
+        "TGAP": TGAP,
+        "OFFGAP": OFFGAP,
+        "AXR": AXR,
+        "R02": R02,  # squared electron radius
+        "LLD": LLD,  # lower energy threashold
+        "E511": E511,
+        "ER": ER,  # energy resolution
+        # > scatter:
+        "SIRNG": sct_irng,  # scatter ring indices
+        "NSRNG": NSRNG,  # number of rings for scatter modelling
+        "COSUPSMX": COSUPSMX,  # cosine of max allowed scatter angle
+        "NCOS": NCOS,  # number of cos samples for LUT
+        "COSSTP": COSSTP,  # cosine step
+        "ICOSSTP": ICOSSTP,  # inverse of cosine step
+        "ETHRLD": ETHRLD,  # intensity emission image threshold (for scatter modelling)
+        "CLGHT": CLGHT,  # speed of light [cm/s]
+        "CWND": CWND,  # coincidence time window [ps]
+        "TOFBINN": TOFBINN,  # number of TOF bins
+        "TOFBINS": TOFBINS,  # TOF bin width [ps]
+        "TOFBIND": TOFBIND,
+        "ITOFBIND": ITOFBIND,
+        # affine and image size for the reconstructed image,
+        # assuming the centre of voxels in mm
+        "AFFINE": array(
+            [
+                [-10 * SO_VXX, 0.0, 0.0, 5.0 * SO_IMX * SO_VXX],  # +5.*SO_VXX
+                [0.0, 10 * SO_VXY, 0.0, -5.0 * SO_IMY * SO_VXY],  # +5.*SO_VXY
+                [0.0, 0.0, 10 * SO_VXZ, -5.0 * SO_IMZ * SO_VXZ],  # -5.*SO_VXZ
+                [0.0, 0.0, 0.0, 1.0],
+            ]
+        ),
+        "IMSIZE": array([SO_IMZ, SO_IMY, SO_IMX]),
+        "BTP": 0,  # 1:non parametric bootstrap, 2: parametric bootstrap (recommended)
+        "BTPRT": 1.0,  # Ratio of bootstrapped/original events (enables downsampling)
+        "SCTSCLEM": SCTSCLEM,
+        "SCTSCLMU": SCTSCLMU,
+    }
+>>>>>>> 7b2bf2a55ad2fdab3219a360f8606914c99d7daf
 
         # mu-map and emission image scaling [z,y,x]
         "SCTSCLEM": [float(SSE_IMZ) / Cnt["SO_IMZ"], float(SSE_IMY) / Cnt["SO_IMY"], float(SSE_IMX) / Cnt["SO_IMX"]],

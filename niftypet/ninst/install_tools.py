@@ -36,7 +36,10 @@ if os.getenv("DISPLAY", False):
 else:
 
     def askdir(title, initialdir):
-        res = input(title + (f" [{initialdir}]: " if initialdir else ": "))
+        try:
+            res = input(title + (f" [{initialdir}]: " if initialdir else ": "))
+        except EOFError:
+            res = ""
         return initialdir if res == "" else res
 
 
@@ -305,7 +308,10 @@ def download_dcm2niix(Cnt, dest):
 
     Cnt["DCM2NIIX"] = fspath(next(binpath.glob("dcm2niix*")))
     # ensure the permissions are given to the executable
-    os.chmod(Cnt["DCM2NIIX"], 755)
+    try:
+        os.chmod(Cnt["DCM2NIIX"], 0o755)
+    except PermissionError:
+        pass
     # update the resources.py file in ~/.niftypet
     Cnt = update_resources(Cnt)
     return Cnt
