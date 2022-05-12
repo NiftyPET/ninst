@@ -53,7 +53,7 @@ sha1_reg = "gcc9-omp-fix"
 # 'f673b7837c0824f55dedb1534b32b55bf68a2823'
 # '6bf84b492050a4b9a93431209babeab9bc8f14da'
 # '62af1ca6777379316669b6934889c19863eaa708'
-reg_ver = "1.5.68"
+reg_ver = "1.5"
 
 # dcm2niix
 repo_dcm = "https://github.com/rordenlab/dcm2niix"
