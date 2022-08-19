@@ -21,19 +21,12 @@ from miutil.web import urlopen_cached
 
 from . import cudasetup as cs
 
-if os.getenv("DISPLAY", False):
+try:
+    if not os.getenv("DISPLAY", False):
+        raise ImportError("non-graphical so skipping tkinter")
     from tkinter import Tk
     from tkinter.filedialog import askdirectory as ask
-
-    @wraps(ask)
-    def askdir(title, initialdir):
-        Tk().withdraw()
-        res = ask(title=title, initialdir=initialdir)
-        Tk().destroy()
-        return res
-
-
-else:
+except ImportError:
 
     def askdir(title, initialdir):
         try:
@@ -41,6 +34,15 @@ else:
         except EOFError:
             res = ""
         return initialdir if res == "" else res
+
+else:
+
+    @wraps(ask)
+    def askdir(title, initialdir):
+        Tk().withdraw()
+        res = ask(title=title, initialdir=initialdir)
+        Tk().destroy()
+        return res
 
 
 log = logging.getLogger(__name__)
