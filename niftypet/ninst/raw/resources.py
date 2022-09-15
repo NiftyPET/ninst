@@ -182,7 +182,7 @@ def get_mcr_constants():
             "MNRD": array([-5, -16, 6, -27, 17, -38, 28, -49, 39, -60, 50]),
             "MXRD": array([5, -6, 16, -17, 27, -28, 38, -39, 49, -50, 60]),
             # > hardware mu-maps
-            "HMULIST": hrdwr_mu_mmr,
+            "HMULIST": [],
         }
     )
 
