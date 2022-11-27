@@ -128,6 +128,170 @@ def get_setup(Cnt=None):
 
 
 # =================================================================================================
+# ============================== GE SIGNA SCANNER C O N S T A N T S ===============================
+
+def get_sig_constants():
+    """
+    Put all the constants together in a dictionary for the Signa PET/MR
+    """
+
+    # > get the baseline setup as well as GPU and third party setups
+    Cnt = get_setup()
+
+    #> update with the key constants
+    Cnt.update({
+        
+        "ISOTOPE": "F18",
+
+        # > perform decay correction (True/False)
+        "DCYCRR": True,
+
+        # > bootstrap option for histogramming
+        "BTP": 0,  # 1:non parametric bootstrap, 2: parametric bootstrap (recommended)
+        "BTPRT": 1.0,  # Ratio of bootstrapped/original events (enables downsampling)
+
+        # > bytes per event in list mode data
+        "BPE": 6,
+
+        # > LM header offset in bytes (for mMR it is in a separate DICOM format)
+        "LMOFF": 0,
+          
+        # > crystal angle
+        "ALPHA": 0.714286 * pi / 180,  # 2*pi/NCRS,
+
+        # > number of rings (axially) and crystals (transaxially)
+        "NRNG": 45,
+
+        # > number of crystals transaxially
+        "NCRS": 448,
+
+        # number of direct sinograms (i.e., for segment 0)
+        "NSEG0": 89,
+
+
+        # > axial crystal width
+        #"AXR": 0.40625,
+
+        # > ring radius
+        "R": 31.18,
+
+        # > coincidence time window [ps]
+        "CWND": 5859.38e-12,
+
+        # > depth of interaction
+        "DOI":0.85,
+        })
+
+
+    # > update with sinogram constants
+    Cnt.update({
+        # > number of angular indexes in a 2D sinogram
+        "NSANGLES": 224,
+
+        # > number of bin indexes in a 2D sinogram
+        "NSBINS": 357,
+
+        "NAW": -1,  # number of total active bins per 2D sino
+
+        # number of sinos in span-1
+        "NSN": 1981,
+
+        # number of sinos in span-1 with no MRD limit
+        "NSN1": Cnt['NRNG']**2,  
+        
+        # > maximum ring difference RD
+        "MRD": 44,
+
+        # span-1 (1), span-11 (11), ssrb (0)
+        "SPN": 1,
+
+        # > squared radius of the transaxial field of view
+        "TFOV2": 890.0,  # squared radius of TFOV
+
+        # > limit axial extension by defining start and end ring
+        # > only works with span-1 (Cnt['SPN']==1)
+        "RNG_STRT": 0,  
+        "RNG_END": Cnt['NRNG'],
+
+        # > effective ring radius accounting for the depth of interaction
+        "R_RING": Cnt["R"] + Cnt["DOI"],
+        "R_2": float("{0:.6f}".format((Cnt["R"] + Cnt["DOI"])**2)),
+        
+        # > inverse of the radius
+        "IR_RING": float("{0:.6f}".format((Cnt["R"] + Cnt["DOI"])**-1)),
+
+        # ------------------------------------------------------
+        # > transaxial projection parameters (should be in
+        # > with the parameters as defined in def.h for C files)
+
+        # > parameters for each transaxial LOR
+        "NTT": 10,
+
+        # > all voxels intersected by a given LOR
+        "NTV": 1807,
+        # ------------------------------------------------------
+        })
+
+
+    # > update with image voxel constants
+    # Reference image size (usually the default from Siemens)
+    # and GPU dimensions for optimal execution
+    Cnt.update(
+        dict(SO_IMZ = 89,
+        SO_IMY = 288,
+        SO_IMX = 288,
+        SO_VXX = 0.208333,
+        SO_VXY = 0.208333,
+        SO_VXZ = 0.278000,
+        SZ_IMZ = 89,
+        SZ_IMY = 288,
+        SZ_IMX = 288,
+        SZ_VOXY = 0.208333,
+        SZ_VOXZ = 0.278000,
+
+        # target scale factors for scatter mu-map and emission image respectively
+        TRGTSCT = [0.5, 0.33],
+        ))
+
+
+    # > update with image voxel constants
+    Cnt.update({
+
+        # > resolution modelling sigma
+        "SIGMA_RM": 0,
+
+        # > radius PSF kernel size used in CUDA convolution
+        "RSZ_PSF_KRNL": 8,
+
+        # > affine and image size for the reconstructed image,
+        # > assuming the centre of voxels in mm
+        "AFFINE": array(
+            [
+                [-10 * Cnt["SO_VXX"], 0.0, 0.0, 5.0 * Cnt["SO_IMX"] * Cnt["SO_VXX"]],
+                [0.0, 10 * Cnt["SO_VXX"], 0.0, -5.0 * Cnt["SO_IMY"] * Cnt["SO_VXX"]],
+                [0.0, 0.0, 10 * Cnt["SO_VXZ"], -5.0 * Cnt["SO_IMZ"] * Cnt["SO_VXZ"]],
+                [0.0, 0.0, 0.0, 1.0],
+            ]
+        ),
+
+        "IMSIZE": array([Cnt["SO_IMZ"], Cnt["SO_IMY"], Cnt["SO_IMX"]]),
+
+        # > inverse size
+        "SZ_VOXZi": round(1 / Cnt["SZ_VOXZ"], 6),
+        })
+
+
+    return Cnt
+
+
+
+
+
+
+
+
+
+# =================================================================================================
 # ========================== SIEMENS microPET SCANNER C O N S T A N T S ===========================
 
 def get_mcr_constants():
@@ -317,8 +481,8 @@ def get_mcr_constants():
         # > inverse size
         "SZ_VOXZi": round(1 / Cnt["SZ_VOXZ"], 6),
         })
-
-
+    
+    return Cnt
 
 
 
