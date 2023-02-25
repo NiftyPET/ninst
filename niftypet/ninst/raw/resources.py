@@ -1,6 +1,6 @@
 """Resources file for NiftyPET NIPET and NIMPA etc."""
 __author__ = ("Pawel J. Markiewicz", "Casper O. da Costa-Luis")
-__copyright__ = "Copyright 2018-20"
+__copyright__ = "Copyright 2018-23"
 
 from math import ceil, pi
 
@@ -99,6 +99,7 @@ def get_setup(Cnt=None):
     # > speed of light
     Cnt["CLGHT"] = 29979245800  # cm/s
 
+
     # the name of the folder for NiftyPET tools
     Cnt["DIRTOOLS"] = DIRTOOLS
 
@@ -123,6 +124,7 @@ def get_setup(Cnt=None):
         val = globals().get(k)
         if val is not None:
             Cnt[k] = val
+
 
     return Cnt
 
@@ -285,15 +287,90 @@ def get_sig_constants():
 
 
 
+# =================================================================================================
+# ============================= SynchroPET SCANNER C O N S T A N T S ==============================
+
+def get_synchropet_constants():
+    """
+    Put all the constants together in a dictionary for the SynchroPET
+    """
+
+    # > get the baseline setup as well as GPU and third party setups
+    Cnt = get_setup()
+
+    Cnt.update({
+
+        # > bytes per event
+        'BPE': 6,
+
+        # > transaxial length/width [mm] of a detector block
+        'BLKWDTH': 9.57,
+
+        # > transaxial length/width [mm] of a detector block
+        'BLKHGHT': 18.46,
+
+        # > crystal to crystal (block diagonal) ring distance [mm]
+        'LC2C': 46.69,
+
+        # > depth of interaction [mm]
+        'DOI': 2.0,
+
+        # > number of rings (axially) and crystals (transaxially)
+        'NRNG': 8,
+
+        #> number of transaxial blocks
+        'NTXBLK': 12,
+
+        #> number of axial blocks
+        'NAXBLK': 1,
+
+        # > number of crystals transaxially
+        'NCRSBLK': 4,
+
+        # > number of transaxial sinogram angles
+        'NSANGLES': 24,
+        
+        # > number of transaxial sinogram bins
+        'NSBINS': 40,
+
+	# > span, default is 1
+	'SPN': 1,
+        })
 
 
 
+    Cnt.update({
+        # > transaxial block angle
+        'ALPHA': 2*pi/Cnt['NTXBLK'],
+
+
+        # > number of crystals transaxially
+        'NCRS': Cnt['NTXBLK']*Cnt['NCRSBLK'],
+
+        # > ring diameter [mm] (face to face perpendicular as opposed to diagonal)
+        'R': round( ((Cnt['LC2C']/2)**2 - (Cnt['BLKWDTH']/2)**2)**.5, 3),
+
+        # > axial ring size
+        'AXR':Cnt['BLKHGHT']/Cnt['NRNG'],
+
+        # > number of segments for SSRB
+        'NSEG0':Cnt['NRNG']*2 - 1,
+
+        # > number of sinograms in span-1
+        'NSN1':Cnt['NRNG']**2
+    })
+
+    Cnt.update({
+        # > effective ring diameter [mm] 
+        'R_RING': Cnt['R']+Cnt['DOI']
+    })
+
+    return Cnt
 
 
 
 # =================================================================================================
 # ========================== SIEMENS microPET SCANNER C O N S T A N T S ===========================
-
 
 def get_mcr_constants():
     """
@@ -411,11 +488,13 @@ def get_mcr_constants():
         # SO_VXX = 0.1669,
         # SO_VXZ = 0.203125,
         # SO_VXY = 0.1669,
+
         # SZ_IMZ = 127,
         # SZ_IMY = 384,
         # SZ_IMX = 384,
         # SZ_VOXY = 0.1669,
         # SZ_VOXZ = 0.203125,
+
         # target scale factors for scatter mu-map and emission image respectively
         TRGTSCT=[0.5, 0.33],
     )
@@ -579,11 +658,13 @@ def get_mmr_constants():
         # SO_VXX = 0.1669,
         # SO_VXZ = 0.203125,
         # SO_VXY = 0.1669,
+
         # SZ_IMZ = 127,
         # SZ_IMY = 384,
         # SZ_IMX = 384,
         # SZ_VOXY = 0.1669,
         # SZ_VOXZ = 0.203125,
+
         # target scale factors for scatter mu-map and emission image respectively
         TRGTSCT=[0.5, 0.33],
     )
