@@ -236,7 +236,7 @@ def get_sig_constants():
 
 
     # > update with image voxel constants
-    # Reference image size (usually the default from Siemens)
+    # Reference image size (usually the default from GE)
     # and GPU dimensions for optimal execution
     Cnt.update(
         dict(SO_IMZ = 89,
@@ -303,17 +303,17 @@ def get_synchropet_constants():
         # > bytes per event
         'BPE': 6,
 
-        # > transaxial length/width [mm] of a detector block
-        'BLKWDTH': 9.57,
+        # > transaxial length/width [cm] of a detector block
+        'BLKWDTH': 0.957,
 
-        # > transaxial length/width [mm] of a detector block
-        'BLKHGHT': 18.46,
+        # > transaxial length/width [cm] of a detector block
+        'BLKHGHT': 1.846,
 
-        # > crystal to crystal (block diagonal) ring distance [mm]
-        'LC2C': 46.69,
+        # > crystal to crystal (block diagonal) ring distance [cm]
+        'LC2C': 4.669,
 
-        # > depth of interaction [mm]
-        'DOI': 2.0,
+        # > depth of interaction [cm]
+        'DOI': 0.20,
 
         # > number of rings (axially) and crystals (transaxially)
         'NRNG': 8,
@@ -333,8 +333,8 @@ def get_synchropet_constants():
         # > number of transaxial sinogram bins
         'NSBINS': 40,
 
-	# > span, default is 1
-	'SPN': 1,
+        # > span, default is 1
+        'SPN': 1,
         })
 
 
@@ -343,11 +343,10 @@ def get_synchropet_constants():
         # > transaxial block angle
         'ALPHA': 2*pi/Cnt['NTXBLK'],
 
-
         # > number of crystals transaxially
         'NCRS': Cnt['NTXBLK']*Cnt['NCRSBLK'],
 
-        # > ring diameter [mm] (face to face perpendicular as opposed to diagonal)
+        # > ring diameter [cm] (face to face perpendicular as opposed to diagonal)
         'R': round( ((Cnt['LC2C']/2)**2 - (Cnt['BLKWDTH']/2)**2)**.5, 3),
 
         # > axial ring size
@@ -357,13 +356,87 @@ def get_synchropet_constants():
         'NSEG0':Cnt['NRNG']*2 - 1,
 
         # > number of sinograms in span-1
-        'NSN1':Cnt['NRNG']**2
+        'NSN1':Cnt['NRNG']**2,
+
+        # > limit axial extension by defining start and end ring
+        # > only works with span-1 (Cnt['SPN']==1)
+        'RNG_STRT': 0,
+        'RNG_END': Cnt['NRNG'],
     })
 
+
+
     Cnt.update({
-        # > effective ring diameter [mm] 
-        'R_RING': Cnt['R']+Cnt['DOI']
+
+        'NAW': Cnt['NSBINS']*Cnt['NSANGLES'],
+
+        # squared radius of TFOV
+        'TFOV2': 4.41,
+
+        # > effective ring diameter [cm] 
+        'R_RING': Cnt['R']+Cnt['DOI'],
+        'R_2': float("{0:.6f}".format((Cnt['R'] + Cnt['DOI']) ** 2)),
+        'IR_RING': float("{0:.6f}".format((Cnt['R'] + Cnt['DOI']) ** -1)),
+        
+        # ------------------------------------------------------
+        # > transaxial projection parameters (should be in
+        # > with the parameters as defined in def.h for C files)
+        # > parameters for each transaxial LOR
+        'NTT': 10,
+        # > all voxels intersected by a given LOR
+        'NTV': 1807,
+        # ------------------------------------------------------
     })
+
+    # > update with image voxel constants
+    # Reference image size (usually the default from vendor)
+    # and GPU dimensions for optimal execution
+    Cnt.update(dict(
+        SO_IMZ = 15,
+        SO_IMY = 48,
+        SO_IMX = 48,
+        SO_VXX = 0.1,
+        SO_VXY = 0.1,
+        SO_VXZ = 0.11,
+        SZ_IMZ = 15,
+        SZ_IMY = 48,
+        SZ_IMX = 48,
+        SZ_VOXY = 0.1,
+        SZ_VOXZ = 0.11,
+
+        # target scale factors for scatter mu-map and emission image respectively
+        TRGTSCT = [0.5, 0.33],
+        ))
+
+
+    # > update with image voxel constants
+    Cnt.update({
+
+        # > resolution modelling sigma
+        'SIGMA_RM': 0,
+
+        # > radius PSF kernel size used in CUDA convolution
+        'RSZ_PSF_KRNL': 8,
+
+        # > affine and image size for the reconstructed image,
+        # > assuming the centre of voxels in mm
+        'AFFINE': array(
+            [
+                [-10 * Cnt['SO_VXX'], 0.0, 0.0, 5.0 * Cnt['SO_IMX'] * Cnt['SO_VXX']],
+                [0.0, 10 * Cnt['SO_VXX'], 0.0, -5.0 * Cnt['SO_IMY'] * Cnt['SO_VXX']],
+                [0.0, 0.0, 10 * Cnt['SO_VXZ'], -5.0 * Cnt['SO_IMZ'] * Cnt['SO_VXZ']],
+                [0.0, 0.0, 0.0, 1.0],
+            ]
+        ),
+
+        'IMSIZE': array([Cnt['SO_IMZ'], Cnt['SO_IMY'], Cnt['SO_IMX']]),
+
+        # > inverse size
+        'SZ_VOXZi': round(1 / Cnt['SZ_VOXZ'], 6),
+        })
+
+
+
 
     return Cnt
 
@@ -380,108 +453,140 @@ def get_mcr_constants():
     # > get the baseline setup as well as GPU and third party setups
     Cnt = get_setup()
 
-    # > update with the key constants
-    Cnt.update(
-        {
-            "ISOTOPE": "F18",
-            # > perform decay correction (True/False)
-            "DCYCRR": True,
-            # > bootstrap option for histogramming
-            "BTP": 0,  # 1:non parametric bootstrap, 2: parametric bootstrap (recommended)
-            "BTPRT": 1.0,  # Ratio of bootstrapped/original events (enables downsampling)
-            # > bytes per event in list mode data
-            "BPE": 4,
-            # > LM header offset in bytes (for mMR it is in a separate DICOM format)
-            "LMOFF": 0,
-            # > crystal angle
-            "ALPHA": 0.714286 * pi / 180,  # 2*pi/NCRS,
-            # > number of rings (axially) and crystals (transaxially)
-            "NRNG": 64,
-            # > number of crystals transaxially
-            "NCRS": 504,
-            # > reduced number of crystals by the gaps (dead crystals)
-            "NCRSR": 448,
-            # > number of buckets for singles
-            "NBCKT": 224,
-            # number of direct sinograms (i.e., for segment 0)
-            "NSEG0": 127,
-            # > crystal gap period
-            "TGAP": 9,
-            # > crystal gap offset (used for getting the sino gaps right at the position)
-            "OFFGAP": 1,
-            # > axial crystal width
-            "AXR": 0.40625,
-            # > ring radius
-            "R": 32.8,
-            # > coincidence time window [ps]
-            "CWND": 5859.38e-12,
-            # > depth of interaction
-            "DOI": 0.67,
-            # > no of sinos in a segment out of 11 segments
-            "SEG": array([127, 115, 115, 93, 93, 71, 71, 49, 49, 27, 27]),
-            # > minimum and maximum ring difference for each segment
-            "MNRD": array([-5, -16, 6, -27, 17, -38, 28, -49, 39, -60, 50]),
-            "MXRD": array([5, -6, 16, -17, 27, -28, 38, -39, 49, -50, 60]),
-            # > hardware mu-maps
-            "HMULIST": [],
-        }
-    )
+    #> update with the key constants
+    Cnt.update({
+        
+        "ISOTOPE": "F18",
 
-    # > update with sinogram constants
-    Cnt.update(
-        {
-            # > number of angular indexes in a 2D sinogram
-            "NSANGLES": 252,
-            # > number of bin indexes in a 2D sinogram
-            "NSBINS": 344,
-            "Naw": -1,  # number of total active bins per 2D sino
-            # > number of sinos in span-11
-            "NSN11": 837,
-            # number of sinos in span-1
-            "NSN1": 4084,
-            # number of sinos in span-1 with no MRD limit
-            "NSN64": Cnt["NRNG"] ** 2,
-            # > maximum ring difference RD
-            "MRD": 60,
-            # span-1 (1), span-11 (11), ssrb (0)
-            "SPN": 11,
-            # > squared radius of the transaxial field of view
-            "TFOV2": 890.0,  # squared radius of TFOV
-            # > limit axial extension by defining start and end ring
-            # > only works with span-1 (Cnt['SPN']==1)
-            "RNG_STRT": 0,
-            "RNG_END": Cnt["NRNG"],
-            # > effective ring radius accounting for the depth of interaction
-            "R_RING": Cnt["R"] + Cnt["DOI"],
-            "R_2": float("{0:.6f}".format((Cnt["R"] + Cnt["DOI"]) ** 2)),
-            # > inverse of the radius
-            "IR_RING": float("{0:.6f}".format((Cnt["R"] + Cnt["DOI"]) ** -1)),
-            # ------------------------------------------------------
-            # > transaxial projection parameters (should be in
-            # > with the parameters as defined in def.h for C files)
-            # > parameters for each transaxial LOR
-            "NTT": 10,
-            # > all voxels intersected by a given LOR
-            "NTV": 1807,
-            # ------------------------------------------------------
-        }
-    )
+        # > perform decay correction (True/False)
+        "DCYCRR": True,
+
+        # > bootstrap option for histogramming
+        "BTP": 0,  # 1:non parametric bootstrap, 2: parametric bootstrap (recommended)
+        "BTPRT": 1.0,  # Ratio of bootstrapped/original events (enables downsampling)
+
+        # > bytes per event in list mode data
+        "BPE": 6,
+
+        # > LM header offset in bytes (for mMR it is in a separate DICOM format)
+        "LMOFF": 0,
+
+        #> number of transaxial blocks
+        "NTXBLK": 16,
+          
+        # > number of rings (axially) and crystals (transaxially)
+        "NRNG": 80,
+
+        # > number of crystals transaxially
+        "NCRS": 320,
+
+        # > reduced number of crystals by the gaps (dead crystals)
+        "NCRSR": None,
+
+        # > number of buckets for singles
+        "NBCKT": 224,
+
+        # number of direct sinograms (i.e., for segment 0)
+        "NSEG0": 159,
+
+        # > crystal gap period
+        "TGAP": None,
+
+        # > crystal gap offset (used for getting the sino gaps right at the position)
+        "OFFGAP": None,
+
+        # > axial crystal width
+        "AXR": 0.159,
+
+        # > ring radius
+        "R": 16.1,
+
+        # > coincidence time window [ps]
+        "CWND": 5859.38e-12,
+
+        # > depth of interaction
+        "DOI":0.0,
+
+        # > no of sinos in a segment out of 11 segments
+        "SEG": array([127, 115, 115, 93, 93, 71, 71, 49, 49, 27, 27]),
+
+        # > minimum and maximum ring difference for each segment
+        "MNRD": array([-5, -16, 6, -27, 17, -38, 28, -49, 39, -60, 50]),
+        "MXRD": array([5, -6, 16, -17, 27, -28, 38, -39, 49, -50, 60]),   
+
+        })
+
+
+    # > update with detector/sinogram constants
+    Cnt.update({
+        # > block angle
+        "ALPHA": round(2*pi/Cnt["NTXBLK"], 4),
+
+        # > number of angular indexes in a 2D sinogram
+        "NSANGLES": 160,
+
+        # > number of bin indexes in a 2D sinogram
+        "NSBINS": 128,
+
+        "Naw": -1,  # number of total active bins per 2D sino
+
+        # > number of sinos in span-11
+        "NSN3": 4319,
+
+        # number of sinos in span-1
+        "NSN1": 6400,
+
+        # > maximum ring difference RD
+        "MRD": 79,
+
+        # span-1 (1), span-11 (11), ssrb (0)
+        "SPN": 1,
+
+        # > squared radius of the transaxial field of view
+        "TFOV2": 890.0,  # squared radius of TFOV
+
+        # > limit axial extension by defining start and end ring
+        # > only works with span-1 (Cnt['SPN']==1)
+        "RNG_STRT": 0,  
+        "RNG_END": Cnt['NRNG'],
+
+        # > effective ring radius accounting for the depth of interaction
+        "R_RING": Cnt["R"] + Cnt["DOI"],
+        "R_2": float("{0:.6f}".format((Cnt["R"] + Cnt["DOI"])**2)),
+        
+        # > inverse of the radius
+        "IR_RING": float("{0:.6f}".format((Cnt["R"] + Cnt["DOI"])**-1)),
+
+        # ------------------------------------------------------
+        # > transaxial projection parameters (should be in
+        # > with the parameters as defined in def.h for C files)
+
+        # > parameters for each transaxial LOR
+        "NTT": 10,
+
+        # > all voxels intersected by a given LOR
+        "NTV": 1807,
+        # ------------------------------------------------------
+        })
+
 
     # > update with image voxel constants
     # Reference image size (usually the default from Siemens)
     # and GPU dimensions for optimal execution
     Cnt.update(
-        SO_IMZ=127,
-        SO_IMY=344,
-        SO_IMX=344,
-        SO_VXX=0.208626,
-        SO_VXY=0.208626,
-        SO_VXZ=0.203125,
-        SZ_IMZ=127,
-        SZ_IMY=320,
-        SZ_IMX=320,
-        SZ_VOXY=0.208626,
-        SZ_VOXZ=0.203125,
+        dict(SO_IMZ = 127,
+        SO_IMY = 344,
+        SO_IMX = 344,
+        SO_VXX = 0.208626,
+        SO_VXY = 0.208626,
+        SO_VXZ = 0.203125,
+        
+        SZ_IMZ = 127,
+        SZ_IMY = 320,
+        SZ_IMX = 320,
+        SZ_VOXY = 0.208626,
+        SZ_VOXZ = 0.203125,
+
         # SO_IMZ = 127,
         # SO_IMY = 384,
         # SO_IMX = 384,
@@ -496,8 +601,9 @@ def get_mcr_constants():
         # SZ_VOXZ = 0.203125,
 
         # target scale factors for scatter mu-map and emission image respectively
-        TRGTSCT=[0.5, 0.33],
-    )
+        TRGTSCT = [0.5, 0.33],
+        ))
+
 
     # > update with image voxel constants
     Cnt.update({
@@ -524,7 +630,7 @@ def get_mcr_constants():
         # > inverse size
         "SZ_VOXZi": round(1 / Cnt["SZ_VOXZ"], 6),
         })
-    
+
     return Cnt
 
 
