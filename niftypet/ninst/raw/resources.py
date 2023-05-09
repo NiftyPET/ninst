@@ -238,21 +238,25 @@ def get_sig_constants():
     # > update with image voxel constants
     # Reference image size (usually the default from GE)
     # and GPU dimensions for optimal execution
-    Cnt.update(
-        dict(SO_IMZ = 89,
-        SO_IMY = 288,
-        SO_IMX = 288,
-        SO_VXX = 0.208333,
-        SO_VXY = 0.208333,
-        SO_VXZ = 0.278000,
-        SZ_IMZ = 89,
-        SZ_IMY = 288,
-        SZ_IMX = 288,
-        SZ_VOXY = 0.208333,
-        SZ_VOXZ = 0.278000,
-
+    zoom = 1
+    Cnt.update(dict(
+        zoom=zoom,
+        SO_IMZ = 89*zoom,
+        SO_IMY = 288*zoom,
+        SO_IMX = 288*zoom,
+        SO_VXX = 0.208333/zoom,
+        SO_VXY = 0.208333/zoom,
+        SO_VXZ = 0.278000/zoom,
         # target scale factors for scatter mu-map and emission image respectively
-        TRGTSCT = [0.5, 0.33],
+        TRGTSCT = [0.5, 0.33],))
+
+    # > GPU/device image dimensions
+    Cnt.update(dict(
+        SZ_IMZ = Cnt['SO_IMZ'],
+        SZ_IMY = Cnt['SO_IMY'],
+        SZ_IMX = Cnt['SO_IMX'],
+        SZ_VOXY = Cnt['SO_VXY'],
+        SZ_VOXZ = Cnt['SO_VXZ'],
         ))
 
 
