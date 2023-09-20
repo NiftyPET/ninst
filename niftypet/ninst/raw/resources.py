@@ -447,9 +447,9 @@ def get_synchropet_constants():
 
 
 # =================================================================================================
-# ========================== SIEMENS microPET SCANNER C O N S T A N T S ===========================
+# ============================ Siemens Inveon scanner C O N S T A N T S ===========================
 
-def get_mcr_constants():
+def get_inv_constants():
     """
     Put all the constants together in a dictionary for the microPET
     """
@@ -477,6 +477,12 @@ def get_mcr_constants():
 
         #> number of transaxial blocks
         "NTXBLK": 16,
+
+        #> number of crystals per block
+        "NCRSBLK": 20,
+
+        # > block width
+        "BLKWDTH": 0.163*20,
           
         # > number of rings (axially) and crystals (transaxially)
         "NRNG": 80,
@@ -503,13 +509,13 @@ def get_mcr_constants():
         "AXR": 0.159,
 
         # > ring radius
-        "R": 16.1,
+        "R": 8.054,
 
         # > coincidence time window [ps]
         "CWND": 5859.38e-12,
 
         # > depth of interaction
-        "DOI":0.0,
+        "DOI":0.458,
 
         # > no of sinos in a segment out of 11 segments
         "SEG": array([127, 115, 115, 93, 93, 71, 71, 49, 49, 27, 27]),
@@ -577,36 +583,26 @@ def get_mcr_constants():
     # > update with image voxel constants
     # Reference image size (usually the default from Siemens)
     # and GPU dimensions for optimal execution
+    zoom = 1
     Cnt.update(
-        dict(SO_IMZ = 127,
-        SO_IMY = 344,
-        SO_IMX = 344,
-        SO_VXX = 0.208626,
-        SO_VXY = 0.208626,
-        SO_VXZ = 0.203125,
-        
-        SZ_IMZ = 127,
-        SZ_IMY = 320,
-        SZ_IMX = 320,
-        SZ_VOXY = 0.208626,
-        SZ_VOXZ = 0.203125,
+        dict(
+        SO_IMZ = 159*zoom,
+        SO_IMY = 224*zoom,
+        SO_IMX = 224*zoom,
+        SO_VXX = 0.0765/zoom,
+        SO_VXY = 0.0765/zoom,
+        SO_VXZ = 0.0796/zoom,
 
-        # SO_IMZ = 127,
-        # SO_IMY = 384,
-        # SO_IMX = 384,
-        # SO_VXX = 0.1669,
-        # SO_VXZ = 0.203125,
-        # SO_VXY = 0.1669,
+        # > target scale factors for scatter mu-map and emission image respectively
+        TRGTSCT = [0.5, 0.33]))
 
-        # SZ_IMZ = 127,
-        # SZ_IMY = 384,
-        # SZ_IMX = 384,
-        # SZ_VOXY = 0.1669,
-        # SZ_VOXZ = 0.203125,
-
-        # target scale factors for scatter mu-map and emission image respectively
-        TRGTSCT = [0.5, 0.33],
-        ))
+    # > GPU/device image dimensions
+    Cnt.update(dict(
+        SZ_IMZ = Cnt['SO_IMZ'],
+        SZ_IMY = Cnt['SO_IMY'],
+        SZ_IMX = Cnt['SO_IMX'],
+        SZ_VOXY = Cnt['SO_VXY'],
+        SZ_VOXZ = Cnt['SO_VXZ']))
 
 
     # > update with image voxel constants
