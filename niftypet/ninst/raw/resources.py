@@ -506,7 +506,7 @@ def get_inv_constants():
         "OFFGAP": None,
 
         # > axial crystal width
-        "AXR": 0.159,
+        "AXR": 0.1592,
 
         # > ring radius
         "R": 8.054,
@@ -538,7 +538,7 @@ def get_inv_constants():
         # > number of bin indexes in a 2D sinogram
         "NSBINS": 128,
 
-        "Naw": -1,  # number of total active bins per 2D sino
+        "NAW": -1,  # number of total active bins per 2D sino
 
         # > number of sinos in span-11
         "NSN3": 4319,
@@ -553,7 +553,7 @@ def get_inv_constants():
         "SPN": 1,
 
         # > squared radius of the transaxial field of view
-        "TFOV2": 890.0,  # squared radius of TFOV
+        "TFOV2": 56.25,  # squared radius of TFOV
 
         # > limit axial extension by defining start and end ring
         # > only works with span-1 (Cnt['SPN']==1)
@@ -586,6 +586,7 @@ def get_inv_constants():
     zoom = 1
     Cnt.update(
         dict(
+        zoom = zoom,
         SO_IMZ = 159*zoom,
         SO_IMY = 224*zoom,
         SO_IMX = 224*zoom,
