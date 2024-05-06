@@ -517,13 +517,6 @@ def get_inv_constants():
         # > depth of interaction
         "DOI":0.458,
 
-        # > no of sinos in a segment out of 11 segments
-        "SEG": array([127, 115, 115, 93, 93, 71, 71, 49, 49, 27, 27]),
-
-        # > minimum and maximum ring difference for each segment
-        "MNRD": array([-5, -16, 6, -27, 17, -38, 28, -49, 39, -60, 50]),
-        "MXRD": array([5, -6, 16, -17, 27, -28, 38, -39, 49, -50, 60]),   
-
         })
 
 
